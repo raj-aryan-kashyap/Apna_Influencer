@@ -841,14 +841,24 @@ input.input-error {
   padding: 4px 10px;
   border-radius: 20px;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.status-live        { background: #d1fae5; color: #065f46; }
-.status-archived    { background: #f3f4f6; color: #6b7280; }
-.status-pending     { background: #fef3c7; color: #92400e; }
-.status-accepted    { background: #dbeafe; color: #1e40af; }
-.status-inprogress  { background: #e0e7ff; color: #3730a3; }
-.status-delivered   { background: #ede9fe; color: #5b21b6; }
-.status-completed   { background: #d1fae5; color: #065f46; }
+/* Legacy chips kept for offers tab */
+.status-live         { background: #d1fae5; color: #065f46; }
+.status-archived     { background: #f3f4f6; color: #6b7280; }
+/* Project status chips */
+.status-live-req     { background: #fef3c7; color: #92400e; }
+.status-negotiating  { background: #dbeafe; color: #1e40af; }
+.status-brief        { background: #ede9fe; color: #5b21b6; }
+.status-active       { background: #e0e7ff; color: #3730a3; }
+.status-near-deadline{ background: #fef9c3; color: #854d0e; }
+.status-delayed      { background: #fee2e2; color: #991b1b; }
+.status-delivered    { background: #d1fae5; color: #065f46; }
+.status-completed    { background: #d1fae5; color: #065f46; }
+.status-cancelled    { background: #f3f4f6; color: #6b7280; }
+.status-archived-proj{ background: #f3f4f6; color: #6b7280; }
 
 /* ── ACTION BUTTONS ── */
 .act-btn {
@@ -864,12 +874,69 @@ input.input-error {
   gap: 5px;
   transition: background 0.15s;
 }
-.act-btn:hover { background: var(--border-color); }
-.act-archive  { color: var(--warning); }
-.act-restore  { color: var(--accent); }
-.act-delete   { color: var(--danger); }
-.act-msg      { color: var(--primary); }
-.act-deliver  { color: var(--accent); }
+.act-btn:hover    { background: var(--border-color); }
+.act-archive      { color: var(--warning); }
+.act-restore      { color: var(--accent); }
+.act-delete       { color: var(--danger); }
+.act-msg          { color: var(--primary); }
+.act-deliver      { color: var(--accent); }
+.act-accept       { color: var(--accent); }
+.act-brief-accept { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+.act-brief-accept:hover { background: #ddd6fe; }
+.act-complete     { color: var(--accent); }
+
+/* ── PROJECT SECTION HEADERS ── */
+.proj-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 14px 0 6px;
+}
+.proj-section-header:first-child { padding-top: 0; }
+.proj-section-header i,
+.proj-section-header svg { font-size: 11px; width: 11px; height: 11px; }
+.proj-section-urgent { color: #dc2626; }
+.proj-section-urgent i,
+.proj-section-urgent svg { color: #dc2626; }
+.proj-section-count {
+  margin-left: auto;
+  background: var(--border-color);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* ── COLLAPSE BUTTON ── */
+.proj-collapse-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background 0.15s;
+}
+.proj-collapse-btn:hover { background: var(--bg-app); }
+.proj-collapse-arrow {
+  font-size: 11px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.proj-collapsed-section { margin-top: 8px; }
 
 /* ── PROJECT CARDS ── */
 .project-card {
@@ -878,6 +945,71 @@ input.input-error {
   padding: 16px;
   border: 1.5px solid var(--border-color);
   box-shadow: var(--shadow-sm);
+  border-left-width: 4px;
+}
+
+/* Card left-border variants */
+.card-delayed {
+  border-left-color: #ef4444;
+  animation: delayedPulse 2s ease-in-out infinite;
+}
+@keyframes delayedPulse {
+  0%, 100% { box-shadow: var(--shadow-sm); }
+  50%       { box-shadow: 0 0 0 3px rgba(239,68,68,0.15), var(--shadow-sm); }
+}
+.card-near-deadline { border-left-color: #f59e0b; }
+.card-active        { border-left-color: var(--primary); }
+.card-brief         { border-left-color: #8b5cf6; }
+.card-negotiating   { border-left-color: #3b82f6; }
+.card-live-req      { border-left-color: #f59e0b; }
+.card-delivered     { border-left-color: var(--accent); }
+.card-completed     { border-left-color: #9ca3af; opacity: 0.85; }
+.card-closed        { border-left-color: #e5e7eb; opacity: 0.6; }
+
+/* ── DEADLINE BADGES ── */
+.deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+.deadline-badge i,
+.deadline-badge svg { font-size: 10px; width: 10px; height: 10px; }
+.badge-overdue  { background: #fee2e2; color: #991b1b; }
+.badge-today    { background: #fee2e2; color: #991b1b; }
+.badge-soon     { background: #fef9c3; color: #854d0e; }
+.badge-normal   { background: var(--bg-app); color: var(--text-muted); border: 1px solid var(--border-color); }
+.badge-done     { background: #d1fae5; color: #065f46; }
+
+/* ── BRIEF SNIPPET ── */
+.brief-snippet {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.brief-snippet i,
+.brief-snippet svg {
+  font-size: 13px;
+  color: #7c3aed;
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+}
+.brief-snippet p {
+  font-size: 12px;
+  color: #5b21b6;
+  line-height: 1.5;
+  margin: 0;
 }
 .project-top {
   display: flex;

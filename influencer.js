@@ -70,21 +70,60 @@ const MOCK_PROJECTS = [
     id: 'p1',
     bizName: 'Chai Wala Café',
     bizCity: 'Delhi',
+    bizColor: '#f97316',
     offerType: 'Reel',
     price: 2000,
-    status: 'in_progress',
-    deadline: '2026-07-08',
-    chatId: 'c1'
+    status: 'active',
+    deadline: '2026-06-25',
+    chatId: 'c1',
+    startDate: '2026-06-20'
   },
   {
     id: 'p2',
+    bizName: 'Studio Glow',
+    bizCity: 'Delhi',
+    bizColor: '#ec4899',
+    offerType: 'Stories',
+    price: 1200,
+    status: 'active',
+    deadline: '2026-06-30',
+    chatId: 'c3',
+    startDate: '2026-06-26'
+  },
+  {
+    id: 'p3',
     bizName: 'Zara Boutique',
     bizCity: 'Delhi',
+    bizColor: '#8b5cf6',
     offerType: 'Feed Post',
     price: 1500,
+    status: 'negotiating',
+    deadline: null,
+    chatId: 'c2'
+  },
+  {
+    id: 'p4',
+    bizName: 'The Plant Store',
+    bizCity: 'Gurugram',
+    bizColor: '#10b981',
+    offerType: 'Reel',
+    price: 2500,
+    status: 'brief_received',
+    deadline: '2026-07-10',
+    chatId: 'c4',
+    briefNote: 'Feature our new monsoon plant collection in a 30-60 sec reel. Show the plants in a home setting.'
+  },
+  {
+    id: 'p5',
+    bizName: "Kiran's Kitchen",
+    bizCity: 'Delhi',
+    bizColor: '#f59e0b',
+    offerType: 'Stories',
+    price: 800,
     status: 'delivered',
     deadline: '2026-06-27',
-    chatId: 'c2'
+    chatId: 'c5',
+    deliveredDate: '2026-06-26'
   }
 ];
 
@@ -118,16 +157,93 @@ const MOCK_CHATS = [
       { from: 'me',  text: "Perfect! I'll come Saturday morning. The post will be live by Sunday evening. Can you share your brand kit?", time: 'Yesterday' },
       { from: 'biz', text: "Sending the brand kit now! Looking forward to it 🌸", time: '2 hrs ago' }
     ]
+  },
+  {
+    id: 'c3',
+    bizName: 'Studio Glow',
+    bizInitial: 'S',
+    bizColor: '#ec4899',
+    offerType: 'Stories',
+    offerPrice: 1200,
+    messages: [
+      { from: 'biz', text: "Hi! We're a wellness studio in Delhi — we love your vibe and would like you to create Stories for our new skincare launch.", time: '2 days ago' },
+      { from: 'me',  text: "Sounds amazing! I'll need to visit your studio for the shoot. What dates work?", time: '2 days ago' },
+      { from: 'biz', text: "This Wednesday or Thursday works. We'll also include a complimentary facial for you!", time: '1 day ago' },
+      { from: 'me',  text: "Thursday works perfectly. I'll be there by 2 PM. Just finalising the content plan now.", time: '1 day ago' }
+    ]
+  },
+  {
+    id: 'c4',
+    bizName: 'The Plant Store',
+    bizInitial: 'T',
+    bizColor: '#10b981',
+    offerType: 'Reel',
+    offerPrice: 2500,
+    messages: [
+      { from: 'biz', text: "Hey! We've sent over a brief for the monsoon plant collection Reel. Please check and let us know if you're on board!", time: '3 hrs ago' },
+      { from: 'me',  text: "Saw the brief — sounds like a beautiful concept. I'll review the details and get back to you shortly.", time: '1 hr ago' }
+    ]
+  },
+  {
+    id: 'c5',
+    bizName: "Kiran's Kitchen",
+    bizInitial: 'K',
+    bizColor: '#f59e0b',
+    offerType: 'Stories',
+    offerPrice: 800,
+    messages: [
+      { from: 'biz', text: "Hi! We booked your Stories package for our home-style lunch menu. Looking forward to the collab!", time: '5 days ago' },
+      { from: 'me',  text: "Hi! So excited for this. I visited and loved the food. The Stories are ready — sending them over now.", time: '3 days ago' },
+      { from: 'biz', text: "These are absolutely stunning! We posted them and the response has been incredible. Thank you so much!", time: '2 days ago' },
+      { from: 'me',  text: "That's wonderful to hear! Happy to work together again anytime.", time: '2 days ago' }
+    ]
   }
 ];
 
 const STATUS_MAP = {
-  pending:     { label: 'New Request',  cls: 'status-pending',    icon: 'fa-bell' },
-  accepted:    { label: 'Accepted',     cls: 'status-accepted',   icon: 'fa-check' },
-  in_progress: { label: 'In Progress',  cls: 'status-inprogress', icon: 'fa-rotate' },
-  delivered:   { label: 'Delivered',    cls: 'status-delivered',  icon: 'fa-paper-plane' },
-  completed:   { label: 'Completed',    cls: 'status-completed',  icon: 'fa-circle-check' }
+  live:           { label: 'New Request',    cls: 'status-live-req',      icon: 'fa-bell' },
+  negotiating:    { label: 'Negotiating',    cls: 'status-negotiating',   icon: 'fa-comments' },
+  brief_received: { label: 'Brief Received', cls: 'status-brief',         icon: 'fa-file-lines' },
+  active:         { label: 'In Progress',    cls: 'status-active',        icon: 'fa-rotate' },
+  near_deadline:  { label: 'Due Soon',       cls: 'status-near-deadline', icon: 'fa-hourglass-half' },
+  delayed:        { label: 'Delayed',        cls: 'status-delayed',       icon: 'fa-triangle-exclamation' },
+  delivered:      { label: 'Delivered',      cls: 'status-delivered',     icon: 'fa-paper-plane' },
+  completed:      { label: 'Completed',      cls: 'status-completed',     icon: 'fa-circle-check' },
+  cancelled:      { label: 'Cancelled',      cls: 'status-cancelled',     icon: 'fa-ban' },
+  archived:       { label: 'Archived',       cls: 'status-archived-proj', icon: 'fa-box-archive' }
 };
+
+// ─────────────────────────────────────────────────────
+// DEADLINE ENGINE — computes _ds (display status) overlay
+// ─────────────────────────────────────────────────────
+function autoUpdateProjectStatuses() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  S.projects.forEach(p => {
+    if (p.deadline && (p.status === 'active' || p.status === 'near_deadline' || p.status === 'delayed')) {
+      const due = new Date(p.deadline);
+      due.setHours(0, 0, 0, 0);
+      const diff = Math.ceil((due - today) / 86400000);
+      if (diff < 0) {
+        p._ds = 'delayed';
+        p._daysOverdue = -diff;
+        p._daysUntil   = null;
+      } else if (diff <= 1) {
+        p._ds = 'near_deadline';
+        p._daysUntil   = diff;
+        p._daysOverdue = null;
+      } else {
+        p._ds = 'active';
+        p._daysUntil   = diff;
+        p._daysOverdue = null;
+      }
+    } else {
+      p._ds = p.status;
+      p._daysUntil   = null;
+      p._daysOverdue = null;
+    }
+  });
+}
 
 // ─────────────────────────────────────────────────────
 // INIT
@@ -135,6 +251,7 @@ const STATUS_MAP = {
 document.addEventListener('DOMContentLoaded', () => {
   S.projects = JSON.parse(JSON.stringify(MOCK_PROJECTS));
   S.chats    = JSON.parse(JSON.stringify(MOCK_CHATS));
+  autoUpdateProjectStatuses();
 
   // Notes char counter
   const notesEl = document.getElementById('f-notes');
@@ -931,67 +1048,247 @@ function startNewOffer() {
 // PROJECTS TAB
 // ─────────────────────────────────────────────────────
 function renderProjectsTab() {
-  if (!S.projects.length) return `
-    <div class="tab-section">
-      <div class="empty-state">
-        <i class="fa-solid fa-briefcase"></i>
-        <p>No active projects yet</p>
-        <small>When businesses book your offers, they'll show up here</small>
-      </div>
-    </div>`;
+  autoUpdateProjectStatuses();
 
   const typeIcon = { Reel: 'fa-circle-play', 'Feed Post': 'fa-image', Stories: 'fa-layer-group' };
   const typeCls  = { Reel: 'pkg-icon-reel',  'Feed Post': 'pkg-icon-post', Stories: 'pkg-icon-stories' };
 
-  const cards = S.projects.map(p => {
-    const st  = STATUS_MAP[p.status] || STATUS_MAP.pending;
-    const due = new Date(p.deadline).toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-    return `
-      <div class="project-card">
-        <div class="project-top">
-          <div class="project-biz">
-            <div class="biz-avatar">${p.bizName[0]}</div>
-            <div>
-              <p class="biz-name">${p.bizName}</p>
-              <p class="biz-city"><i class="fa-solid fa-location-dot"></i> ${p.bizCity}</p>
-            </div>
-          </div>
-          <span class="status-chip ${st.cls}">
-            <i class="fa-solid ${st.icon}"></i> ${st.label}
-          </span>
-        </div>
-        <div class="project-details">
-          <span class="project-offer-type">
-            <span class="pkg-icon-wrap ${typeCls[p.offerType]}" style="width:22px;height:22px;border-radius:5px;display:inline-flex;">
-              <i class="fa-solid ${typeIcon[p.offerType]}" style="font-size:10px;"></i>
-            </span>
-            ${p.offerType}
-          </span>
-          <span class="project-price">₹${p.price.toLocaleString('en-IN')}</span>
-          <span class="project-deadline"><i class="fa-regular fa-calendar"></i> Due ${due}</span>
-        </div>
-        <div class="project-actions">
-          <button class="act-btn act-msg" onclick="openChat('${p.chatId}','projects')">
-            <i class="fa-solid fa-message"></i> Message
-          </button>
-          ${p.status === 'in_progress' ? `
-            <button class="act-btn act-deliver" onclick="markDelivered('${p.id}')">
-              <i class="fa-solid fa-paper-plane"></i> Mark Delivered
-            </button>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
+  const SECTIONS = [
+    { key: 'delayed',        label: 'Delayed',        icon: 'fa-triangle-exclamation', urgent: true },
+    { key: 'near_deadline',  label: 'Due Soon',        icon: 'fa-hourglass-half',       urgent: true },
+    { key: 'active',         label: 'In Progress',    icon: 'fa-rotate',               urgent: false },
+    { key: 'brief_received', label: 'Brief Received', icon: 'fa-file-lines',           urgent: false },
+    { key: 'negotiating',    label: 'Negotiating',    icon: 'fa-comments',             urgent: false },
+    { key: 'live',           label: 'New Requests',   icon: 'fa-bell',                 urgent: false },
+    { key: 'delivered',      label: 'Delivered',      icon: 'fa-paper-plane',          urgent: false },
+    { key: 'completed',      label: 'Completed',      icon: 'fa-circle-check',         urgent: false }
+  ];
+  const CLOSED_KEYS = ['cancelled', 'archived'];
 
-  return `<div class="tab-section">${cards}</div>`;
+  const mainProjects   = S.projects.filter(p => !CLOSED_KEYS.includes(p._ds));
+  const closedProjects = S.projects.filter(p =>  CLOSED_KEYS.includes(p._ds));
+
+  if (!mainProjects.length && !closedProjects.length) return `
+    <div class="tab-section">
+      <div class="empty-state">
+        <i class="fa-solid fa-briefcase"></i>
+        <p>No active projects yet</p>
+        <small>When businesses book your offers, they will show up here</small>
+      </div>
+    </div>`;
+
+  let html = '<div class="tab-section">';
+
+  SECTIONS.forEach(sec => {
+    const items = mainProjects.filter(p => p._ds === sec.key);
+    if (!items.length) return;
+    html += `
+      <div class="proj-section-header${sec.urgent ? ' proj-section-urgent' : ''}">
+        <i class="fa-solid ${sec.icon}"></i> ${sec.label}
+        <span class="proj-section-count">${items.length}</span>
+      </div>`;
+    items.forEach(p => { html += renderProjectCard(p, typeIcon, typeCls); });
+  });
+
+  if (closedProjects.length) {
+    html += `
+      <button class="proj-collapse-btn" onclick="toggleCollapsedProjects(this)">
+        <i class="fa-solid fa-chevron-right proj-collapse-arrow"></i>
+        Archived &amp; Cancelled (${closedProjects.length})
+      </button>
+      <div class="proj-collapsed-section hidden">`;
+    closedProjects.forEach(p => { html += renderProjectCard(p, typeIcon, typeCls); });
+    html += `</div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderProjectCard(p, typeIcon, typeCls) {
+  const ds  = p._ds || p.status;
+  const st  = STATUS_MAP[ds] || STATUS_MAP.active;
+
+  const CARD_CLS = {
+    delayed:       'card-delayed',
+    near_deadline: 'card-near-deadline',
+    active:        'card-active',
+    brief_received:'card-brief',
+    negotiating:   'card-negotiating',
+    live:          'card-live-req',
+    delivered:     'card-delivered',
+    completed:     'card-completed',
+    cancelled:     'card-closed',
+    archived:      'card-closed'
+  };
+  const cardCls = CARD_CLS[ds] || '';
+
+  // Deadline / delivery badge
+  let deadlineBadge = '';
+  if (p.deadline) {
+    const due = new Date(p.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    if (ds === 'delayed') {
+      deadlineBadge = `<span class="deadline-badge badge-overdue"><i class="fa-solid fa-clock"></i> ${p._daysOverdue}d overdue</span>`;
+    } else if (ds === 'near_deadline') {
+      deadlineBadge = p._daysUntil === 0
+        ? `<span class="deadline-badge badge-today"><i class="fa-solid fa-circle-exclamation"></i> Due today</span>`
+        : `<span class="deadline-badge badge-soon"><i class="fa-solid fa-hourglass-half"></i> Due tomorrow</span>`;
+    } else if (ds === 'active' || ds === 'brief_received') {
+      deadlineBadge = `<span class="deadline-badge badge-normal"><i class="fa-regular fa-calendar"></i> Due ${due}</span>`;
+    } else if (ds === 'delivered') {
+      const dDate = p.deliveredDate
+        ? new Date(p.deliveredDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+        : due;
+      deadlineBadge = `<span class="deadline-badge badge-done"><i class="fa-solid fa-check"></i> Delivered ${dDate}</span>`;
+    }
+  }
+
+  const briefHtml = (ds === 'brief_received' && p.briefNote) ? `
+    <div class="brief-snippet">
+      <i class="fa-solid fa-file-lines"></i>
+      <p>${p.briefNote.length > 80 ? p.briefNote.slice(0, 80) + '...' : p.briefNote}</p>
+    </div>` : '';
+
+  const offerCls  = typeCls[p.offerType]  || 'pkg-icon-reel';
+  const offerIcon = typeIcon[p.offerType] || 'fa-circle-play';
+  const bizBg     = p.bizColor || '#6366f1';
+
+  return `
+    <div class="project-card ${cardCls}">
+      <div class="project-top">
+        <div class="project-biz">
+          <div class="biz-avatar" style="background:${bizBg};color:#fff;">${p.bizName[0]}</div>
+          <div>
+            <p class="biz-name">${p.bizName}</p>
+            <p class="biz-city"><i class="fa-solid fa-location-dot"></i> ${p.bizCity}</p>
+          </div>
+        </div>
+        <span class="status-chip ${st.cls}">
+          <i class="fa-solid ${st.icon}"></i> ${st.label}
+        </span>
+      </div>
+      <div class="project-details">
+        <span class="project-offer-type">
+          <span class="pkg-icon-wrap ${offerCls}" style="width:22px;height:22px;border-radius:5px;display:inline-flex;">
+            <i class="fa-solid ${offerIcon}" style="font-size:10px;"></i>
+          </span>
+          ${p.offerType}
+        </span>
+        <span class="project-price">₹${p.price.toLocaleString('en-IN')}</span>
+        ${deadlineBadge}
+      </div>
+      ${briefHtml}
+      <div class="project-actions">
+        ${buildProjectActions(p, ds)}
+      </div>
+    </div>
+  `;
+}
+
+function buildProjectActions(p, ds) {
+  const msgBtn = `<button class="act-btn act-msg" onclick="openChat('${p.chatId}','projects')"><i class="fa-solid fa-message"></i> Message</button>`;
+  switch (ds) {
+    case 'live':
+      return msgBtn + `<button class="act-btn act-accept" onclick="acceptProject('${p.id}')"><i class="fa-solid fa-check"></i> Accept</button>`;
+    case 'negotiating':
+      return msgBtn;
+    case 'brief_received':
+      return msgBtn + `<button class="act-btn act-brief-accept" onclick="acceptBrief('${p.id}')"><i class="fa-solid fa-file-check"></i> Accept Brief</button>`;
+    case 'active':
+    case 'near_deadline':
+    case 'delayed':
+      return msgBtn + `<button class="act-btn act-deliver" onclick="markDelivered('${p.id}')"><i class="fa-solid fa-paper-plane"></i> Mark Delivered</button>`;
+    case 'delivered':
+      return msgBtn + `<button class="act-btn act-complete" onclick="markCompleted('${p.id}')"><i class="fa-solid fa-circle-check"></i> Mark Completed</button>`;
+    case 'completed':
+      return msgBtn + `<button class="act-btn act-archive" onclick="archiveProject('${p.id}')"><i class="fa-solid fa-box-archive"></i> Archive</button>`;
+    case 'cancelled':
+    case 'archived':
+      return `<button class="act-btn act-delete" onclick="deleteProject('${p.id}')"><i class="fa-solid fa-trash"></i> Remove</button>`;
+    default:
+      return msgBtn;
+  }
 }
 
 function markDelivered(id) {
   const p = S.projects.find(x => x.id === id);
   if (!p) return;
   p.status = 'delivered';
+  p.deliveredDate = new Date().toISOString().split('T')[0];
+  autoUpdateProjectStatuses();
   switchTab('projects');
-  showToast('Marked as delivered! 🎉');
+  showToast('Marked as delivered!');
+}
+
+function acceptProject(id) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'negotiating';
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+  showToast('Accepted! Start the conversation.');
+}
+
+function acceptBrief(id) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'active';
+  p.startDate = new Date().toISOString().split('T')[0];
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+  showToast('Brief accepted. Time to create!');
+}
+
+function markCompleted(id) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'completed';
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+  showToast('Project completed!');
+}
+
+function cancelProject(id) {
+  if (!confirm('Cancel this project?')) return;
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'cancelled';
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+  showToast('Project cancelled');
+}
+
+function archiveProject(id) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = 'archived';
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+  showToast('Project archived');
+}
+
+function deleteProject(id) {
+  if (!confirm('Remove this project permanently?')) return;
+  S.projects = S.projects.filter(x => x.id !== id);
+  switchTab('projects');
+  showToast('Project removed');
+}
+
+function updateProjectStatus(id, status) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  p.status = status;
+  autoUpdateProjectStatuses();
+  switchTab('projects');
+}
+
+function toggleCollapsedProjects(btn) {
+  const section = btn.nextElementSibling;
+  if (!section) return;
+  const isHidden = section.classList.contains('hidden');
+  section.classList.toggle('hidden', !isHidden);
+  const arrow = btn.querySelector('.proj-collapse-arrow');
+  if (arrow) arrow.style.transform = isHidden ? 'rotate(90deg)' : '';
 }
 
 // ─────────────────────────────────────────────────────
