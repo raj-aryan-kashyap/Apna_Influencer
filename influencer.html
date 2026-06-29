@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Creator — Apna Influencer</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="influencer.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/js/all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+
+<div id="toast" class="toast hidden"></div>
+<!-- Single global QR file input shared by both onboarding and edit views -->
+<input type="file" id="qr-upload-global" accept="image/*" style="display:none">
+
+<div class="app-container" id="app">
+
+  <!-- ══════════════════════════════════
+       VIEW 1: ONBOARDING SLIDES
+  ══════════════════════════════════ -->
+  <section id="v-slides" class="view hidden">
+    <div class="slides-container">
+      <div id="slide-content" class="slide-node"></div>
+      <div class="slide-footer">
+        <div id="slide-dots" class="dots-indicator"></div>
+        <button class="btn-primary btn-block" id="btn-slide-next" onclick="nextSlide()">Next</button>
+        <button class="btn-ghost" onclick="skipToSetup()">Skip intro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 2: STEP 1 — IDENTITY
+  ══════════════════════════════════ -->
+  <section id="v-step1" class="view hidden">
+    <div class="setup-header">
+      <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i></a>
+      <div class="step-indicator">
+        <span class="step-dot active">1</span>
+        <span class="step-line"></span>
+        <span class="step-dot">2</span>
+        <span class="step-line"></span>
+        <span class="step-dot">3</span>
+      </div>
+    </div>
+
+    <h2 class="form-title">Set up your profile</h2>
+    <p class="form-subtitle">Businesses will see this when they find you.</p>
+
+    <!-- Photo upload — optional, silent random avatar assigned if skipped -->
+    <div class="form-group">
+      <label>Profile Photo <span class="optional-tag">optional</span></label>
+      <div class="photo-upload-row">
+        <div class="photo-thumb" id="photo-thumb">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="photo-upload-info">
+          <label class="btn-av-action" for="photo-upload">
+            <i class="fa-solid fa-camera"></i> Choose photo
+          </label>
+          <input type="file" id="photo-upload" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+          <button type="button" class="btn-av-action btn-rm-photo hidden" id="btn-remove-photo" onclick="removePhoto()">
+            <i class="fa-solid fa-xmark"></i> Remove
+          </button>
+          <p class="photo-hint">Skip. We will pick a fun random avatar for you.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-container">
+      <div class="form-group">
+        <label for="f-url">
+          <i class="fa-solid fa-link"></i> Instagram Profile Link
+        </label>
+        <input type="url" id="f-url" placeholder="https://instagram.com/yourname" autocomplete="off"
+               oninput="autoFetchHandle('f-url','f-handle','f-handle-hint')">
+        <div class="url-quick-actions">
+          <button type="button" class="quick-action-btn quick-action-primary" onclick="openQRCamera('f-url','f-handle','f-handle-hint')">
+            <i class="fa-solid fa-camera"></i> Scan QR Code
+          </button>
+          <button type="button" class="quick-action-btn" onclick="triggerQRScan('f-url','f-handle','f-handle-hint')">
+            <i class="fa-solid fa-qrcode"></i> Upload QR Code
+          </button>
+        </div>
+        <span class="field-hint">Or type your Instagram URL above</span>
+        <span class="field-error" id="err-url"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="f-handle">
+          <i class="fa-solid fa-at"></i> Instagram Handle
+        </label>
+        <input type="text" id="f-handle" placeholder="yourhandle" autocomplete="off" maxlength="31"
+               oninput="clearAutoFetchHint('f-handle-hint')">
+        <span class="auto-fetch-hint hidden" id="f-handle-hint">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-filled from your link. You can still edit this.
+        </span>
+        <span class="field-hint">Letters, numbers, dots and underscores only</span>
+        <span class="field-error" id="err-handle"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="f-name">Full Name</label>
+        <input type="text" id="f-name" placeholder="Priya Sharma" autocomplete="name" maxlength="50">
+        <span class="field-error" id="err-name"></span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="f-city">
+            <i class="fa-solid fa-location-dot"></i> City
+          </label>
+          <input type="text" id="f-city" placeholder="Delhi" maxlength="50">
+          <span class="field-error" id="err-city"></span>
+        </div>
+        <div class="form-group">
+          <label><i class="fa-solid fa-palette"></i> Niche</label>
+          <div class="niche-picker" id="niche-picker">
+            <button type="button" class="niche-trigger" id="niche-trigger" onclick="toggleNichePicker()">
+              <span class="niche-trigger-inner" id="niche-display">
+                <i class="fa-solid fa-palette"></i>
+                <span class="niche-placeholder">Select niche</span>
+              </span>
+              <i class="fa-solid fa-chevron-down niche-arrow" id="niche-arrow"></i>
+            </button>
+            <div class="niche-dropdown hidden" id="niche-dropdown">
+              <button type="button" class="niche-opt" onclick="pickNiche('Food &amp; Beverage','fa-utensils','Food &amp; Bev')"><i class="fa-solid fa-utensils"></i> Food &amp; Bev</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Fashion &amp; Lifestyle','fa-shirt','Fashion')"><i class="fa-solid fa-shirt"></i> Fashion</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Fitness &amp; Health','fa-dumbbell','Fitness')"><i class="fa-solid fa-dumbbell"></i> Fitness</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Travel','fa-plane','Travel')"><i class="fa-solid fa-plane"></i> Travel</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Beauty &amp; Skincare','fa-spa','Beauty')"><i class="fa-solid fa-spa"></i> Beauty</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Tech &amp; Gadgets','fa-microchip','Tech')"><i class="fa-solid fa-microchip"></i> Tech</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Home &amp; Decor','fa-house','Home')"><i class="fa-solid fa-house"></i> Home</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Entertainment','fa-film','Entertainment')"><i class="fa-solid fa-film"></i> Entertainment</button>
+              <button type="button" class="niche-opt" onclick="pickNiche('Other','fa-star','Other')"><i class="fa-solid fa-star"></i> Other</button>
+            </div>
+          </div>
+          <input type="hidden" id="f-niche" value="">
+          <span class="field-error" id="err-niche"></span>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary btn-block" onclick="goToStep2()">Continue</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 3: STEP 2 — METRICS
+  ══════════════════════════════════ -->
+  <section id="v-step2" class="view hidden">
+    <div class="setup-header">
+      <button class="btn-back" onclick="showView('v-step1')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="step-indicator">
+        <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+        <span class="step-line filled"></span>
+        <span class="step-dot active">2</span>
+        <span class="step-line"></span>
+        <span class="step-dot">3</span>
+      </div>
+    </div>
+
+    <h2 class="form-title">Your reach &amp; numbers</h2>
+    <p class="form-subtitle">Be honest. Businesses verify these before booking.</p>
+
+    <div class="form-container">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="f-followers">
+            <i class="fa-solid fa-users"></i> Followers
+          </label>
+          <input type="number" id="f-followers" placeholder="e.g. 12500" min="100">
+          <span class="field-error" id="err-followers"></span>
+        </div>
+        <div class="form-group">
+          <label for="f-engagement">
+            <i class="fa-solid fa-percent"></i> Engagement
+          </label>
+          <input type="number" id="f-engagement" placeholder="e.g. 4.2" step="0.1" min="0.1" max="100">
+          <span class="field-error" id="err-engagement"></span>
+        </div>
+      </div>
+
+      <fieldset class="metrics-fieldset">
+        <legend>Average views per content type</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-reel-views"><i class="fa-solid fa-circle-play"></i> Reel Views</label>
+            <input type="number" id="f-reel-views" placeholder="e.g. 15000" min="0">
+            <span class="field-error" id="err-reel-views"></span>
+          </div>
+          <div class="form-group">
+            <label for="f-post-views"><i class="fa-solid fa-image"></i> Post Views</label>
+            <input type="number" id="f-post-views" placeholder="e.g. 8000" min="0">
+            <span class="field-error" id="err-post-views"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="f-story-views"><i class="fa-solid fa-layer-group"></i> Story Views</label>
+          <input type="number" id="f-story-views" placeholder="e.g. 5000" min="0">
+          <span class="field-error" id="err-story-views"></span>
+        </div>
+      </fieldset>
+
+      <fieldset class="metrics-fieldset">
+        <legend>Average engagement per post (last 7 days)</legend>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="f-likes"><i class="fa-solid fa-heart"></i> Avg. Likes</label>
+            <input type="number" id="f-likes" placeholder="Likes" min="0">
+            <span class="field-error" id="err-likes"></span>
+          </div>
+          <div class="form-group">
+            <label for="f-comments"><i class="fa-solid fa-comment"></i> Avg. Comments</label>
+            <input type="number" id="f-comments" placeholder="Comments" min="0">
+            <span class="field-error" id="err-comments"></span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="metrics-fieldset">
+        <legend>Pinned Content <span class="optional-tag" style="text-transform:none;font-weight:400;">optional</span></legend>
+        <p class="field-hint" style="margin-bottom:12px;">Your 3 best-performing pieces. Businesses will see these as your showcase work.</p>
+        <div class="form-group">
+          <label for="f-pin-reel"><i class="fa-solid fa-circle-play"></i> Best Reel</label>
+          <input type="url" id="f-pin-reel" placeholder="https://instagram.com/reel/...">
+        </div>
+        <div class="form-group">
+          <label for="f-pin-post"><i class="fa-solid fa-image"></i> Best Feed Post</label>
+          <input type="url" id="f-pin-post" placeholder="https://instagram.com/p/...">
+        </div>
+        <div class="form-group">
+          <label for="f-pin-story"><i class="fa-solid fa-layer-group"></i> Best Story / Highlight</label>
+          <input type="url" id="f-pin-story" placeholder="https://instagram.com/stories/...">
+        </div>
+      </fieldset>
+
+      <button type="button" class="btn-primary btn-block" onclick="goToPackages()">Set My Rates</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 4: PACKAGE BUILDER
+  ══════════════════════════════════ -->
+  <section id="v-packages" class="view hidden">
+    <div class="setup-header">
+      <button class="btn-back" id="pkg-back-btn" onclick="showView('v-step2')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="step-indicator">
+        <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+        <span class="step-line filled"></span>
+        <span class="step-dot done"><i class="fa-solid fa-check"></i></span>
+        <span class="step-line filled"></span>
+        <span class="step-dot active">3</span>
+      </div>
+    </div>
+
+    <h2 class="form-title">Set your rates</h2>
+    <p class="form-subtitle">Toggle what you offer. At least one required.</p>
+
+    <div class="pkg-list">
+
+      <!-- Reel -->
+      <div class="pkg-card" id="pkg-reel">
+        <div class="pkg-header" onclick="togglePackage('reel')">
+          <div class="pkg-info">
+            <div class="pkg-icon-wrap pkg-icon-reel">
+              <i class="fa-solid fa-circle-play"></i>
+            </div>
+            <div>
+              <p class="pkg-name">Reel</p>
+              <p class="pkg-desc">Short-form video, 15–60 seconds</p>
+            </div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="tog-reel" onchange="togglePackage('reel')">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="pkg-body hidden" id="body-reel">
+          <div class="price-row">
+            <span class="rupee-sym">₹</span>
+            <input type="number" id="price-reel" class="price-input" placeholder="2000" min="1">
+          </div>
+          <span class="field-error" id="err-reel"></span>
+        </div>
+      </div>
+
+      <!-- Feed Post -->
+      <div class="pkg-card" id="pkg-post">
+        <div class="pkg-header" onclick="togglePackage('post')">
+          <div class="pkg-info">
+            <div class="pkg-icon-wrap pkg-icon-post">
+              <i class="fa-solid fa-image"></i>
+            </div>
+            <div>
+              <p class="pkg-name">Feed Post</p>
+              <p class="pkg-desc">Photo or carousel, stays on feed</p>
+            </div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="tog-post" onchange="togglePackage('post')">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="pkg-body hidden" id="body-post">
+          <div class="price-row">
+            <span class="rupee-sym">₹</span>
+            <input type="number" id="price-post" class="price-input" placeholder="1200" min="1">
+          </div>
+          <span class="field-error" id="err-post"></span>
+        </div>
+      </div>
+
+      <!-- Stories -->
+      <div class="pkg-card" id="pkg-stories">
+        <div class="pkg-header" onclick="togglePackage('stories')">
+          <div class="pkg-info">
+            <div class="pkg-icon-wrap pkg-icon-stories">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div>
+              <p class="pkg-name">Stories</p>
+              <p class="pkg-desc">Set of 3 story slides, 24-hr reach</p>
+            </div>
+          </div>
+          <label class="toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" id="tog-stories" onchange="togglePackage('stories')">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="pkg-body hidden" id="body-stories">
+          <div class="price-row">
+            <span class="rupee-sym">₹</span>
+            <input type="number" id="price-stories" class="price-input" placeholder="800" min="1">
+          </div>
+          <span class="field-error" id="err-stories"></span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="form-container" style="margin-top:20px;">
+      <div class="form-group">
+        <label for="f-delivery">
+          <i class="fa-solid fa-clock"></i> Delivery Time
+        </label>
+        <div class="delivery-row">
+          <input type="number" id="f-delivery" placeholder="3" min="1" max="90" class="delivery-input">
+          <span class="delivery-unit">days after confirmation</span>
+        </div>
+        <span class="field-error" id="err-delivery"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="f-notes">
+          <i class="fa-solid fa-list-check"></i> What's included
+          <span class="optional-tag">optional</span>
+        </label>
+        <textarea id="f-notes" class="textarea-input" placeholder="e.g. 1 Reel with caption, hashtags, and a 30-day analytics report" rows="3" maxlength="200" oninput="updateNoteCount()"></textarea>
+        <span class="char-count" id="notes-count">0 / 200</span>
+      </div>
+
+      <span class="field-error" id="err-pkg-global"></span>
+
+      <button type="button" class="btn-primary btn-block" onclick="goToPreview()">Preview Offer</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 5: OFFER PREVIEW
+  ══════════════════════════════════ -->
+  <section id="v-preview" class="view hidden">
+    <div class="setup-header" style="margin-bottom:4px;">
+      <button class="btn-back" onclick="showView('v-packages')"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 style="font-size:18px;font-weight:700;">Preview Offer</h2>
+      <div style="width:32px;"></div>
+    </div>
+    <p class="form-subtitle" style="margin-bottom:20px;">This is exactly how businesses will see you.</p>
+
+    <div id="offer-preview-card"></div>
+
+    <div class="preview-actions">
+      <button class="btn-secondary" onclick="showView('v-packages')">Edit</button>
+      <button class="btn-primary" onclick="goLive()">Go Live</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 6: DASHBOARD
+  ══════════════════════════════════ -->
+  <section id="v-dash" class="view hidden dash-view">
+
+    <div class="dash-header">
+      <div class="dash-profile-mini">
+        <div class="avatar-circle" id="dash-avatar"></div>
+        <div>
+          <p class="dash-handle" id="dash-handle">@handle</p>
+          <p class="dash-meta" id="dash-meta">City · Niche</p>
+        </div>
+      </div>
+      <span class="live-badge"><span class="pulse-dot"></span> Live</span>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <p class="stat-num" id="stat-offers">0</p>
+        <p class="stat-label">Offers</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <p class="stat-num" id="stat-projects">0</p>
+        <p class="stat-label">Projects</p>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <p class="stat-num" id="stat-messages">0</p>
+        <p class="stat-label">Messages</p>
+      </div>
+    </div>
+
+    <div id="tab-content" class="tab-content"></div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn" id="nav-offers" onclick="switchTab('offers')">
+        <i class="fa-solid fa-tag"></i>
+        <span>Offers</span>
+      </button>
+      <button class="nav-btn" id="nav-projects" onclick="switchTab('projects')">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>Projects</span>
+      </button>
+      <button class="nav-btn" id="nav-messages" onclick="switchTab('messages')">
+        <i class="fa-solid fa-message"></i>
+        <span>Messages</span>
+      </button>
+      <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ══════════════════════════════════
+       VIEW 7: CHAT DETAIL
+  ══════════════════════════════════ -->
+  <section id="v-chat" class="view hidden chat-view">
+    <div class="chat-top-header">
+      <button class="btn-back" onclick="backFromChat()"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="chat-header-info" id="chat-header-info"></div>
+    </div>
+    <div class="chat-offer-banner" id="chat-offer-banner"></div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" class="chat-input-field" placeholder="Type a message…" onkeypress="handleChatEnter(event)">
+      <button class="btn-send" onclick="sendMessage()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       VIEW 8: EDIT PROFILE
+  ══════════════════════════════════ -->
+  <section id="v-edit" class="view hidden">
+
+    <!-- ── STEP 1: Identity ── -->
+    <div id="edit-panel-1">
+      <div class="setup-header">
+        <button class="btn-back" onclick="cancelEdit()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="edit-step-label-wrap">
+          <p class="edit-step-label">Step 1 of 2</p>
+          <h2 class="form-title" style="margin:0;">Identity</h2>
+        </div>
+        <div style="width:32px;"></div>
+      </div>
+
+      <!-- Photo -->
+      <div class="form-group" style="margin-bottom:18px;">
+        <label>Profile Photo <span class="optional-tag">optional</span></label>
+        <div class="photo-upload-row">
+          <div class="photo-thumb" id="edit-photo-thumb">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="photo-upload-info">
+            <label class="btn-av-action" for="edit-photo-upload">
+              <i class="fa-solid fa-camera"></i> Upload Photo
+            </label>
+            <input type="file" id="edit-photo-upload" accept="image/*" style="display:none" onchange="handleEditPhotoUpload(event)">
+            <button type="button" class="btn-av-action btn-rm-photo hidden" id="edit-btn-remove-photo" onclick="removeEditPhoto()">
+              <i class="fa-solid fa-xmark"></i> Remove
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <div class="form-group">
+          <label for="edit-url"><i class="fa-solid fa-link"></i> Instagram Profile Link</label>
+          <input type="url" id="edit-url" placeholder="https://instagram.com/yourname"
+                 oninput="autoFetchHandle('edit-url','edit-handle','edit-handle-hint')">
+          <div class="url-quick-actions">
+            <button type="button" class="quick-action-btn quick-action-primary" onclick="openQRCamera('edit-url','edit-handle','edit-handle-hint')">
+              <i class="fa-solid fa-camera"></i> Scan QR Code
+            </button>
+            <button type="button" class="quick-action-btn" onclick="triggerQRScan('edit-url','edit-handle','edit-handle-hint')">
+              <i class="fa-solid fa-qrcode"></i> Upload QR Code
+            </button>
+          </div>
+          <span class="field-hint">Or type your Instagram URL above</span>
+          <span class="field-error" id="edit-err-url"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-handle"><i class="fa-solid fa-at"></i> Instagram Handle</label>
+          <input type="text" id="edit-handle" placeholder="yourhandle" maxlength="31"
+                 oninput="clearAutoFetchHint('edit-handle-hint')">
+          <span class="auto-fetch-hint hidden" id="edit-handle-hint">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-filled from your link. You can still edit this.
+          </span>
+
+          <span class="field-error" id="edit-err-handle"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-name">Full Name</label>
+          <input type="text" id="edit-name" placeholder="Priya Sharma" maxlength="50">
+          <span class="field-error" id="edit-err-name"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-city"><i class="fa-solid fa-location-dot"></i> City</label>
+            <input type="text" id="edit-city" placeholder="Delhi" maxlength="50">
+            <span class="field-error" id="edit-err-city"></span>
+          </div>
+          <div class="form-group">
+            <label><i class="fa-solid fa-palette"></i> Niche</label>
+            <div class="niche-picker" id="edit-niche-picker">
+              <button type="button" class="niche-trigger" id="edit-niche-trigger" onclick="toggleEditNichePicker()">
+                <span class="niche-trigger-inner" id="edit-niche-display">
+                  <i class="fa-solid fa-palette"></i>
+                  <span class="niche-placeholder">Select niche</span>
+                </span>
+                <i class="fa-solid fa-chevron-down niche-arrow" id="edit-niche-arrow"></i>
+              </button>
+              <div class="niche-dropdown hidden" id="edit-niche-dropdown">
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Food &amp; Beverage','fa-utensils','Food &amp; Bev')"><i class="fa-solid fa-utensils"></i> Food &amp; Bev</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Fashion &amp; Lifestyle','fa-shirt','Fashion')"><i class="fa-solid fa-shirt"></i> Fashion</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Fitness &amp; Health','fa-dumbbell','Fitness')"><i class="fa-solid fa-dumbbell"></i> Fitness</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Travel','fa-plane','Travel')"><i class="fa-solid fa-plane"></i> Travel</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Beauty &amp; Skincare','fa-spa','Beauty')"><i class="fa-solid fa-spa"></i> Beauty</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Tech &amp; Gadgets','fa-microchip','Tech')"><i class="fa-solid fa-microchip"></i> Tech</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Home &amp; Decor','fa-house','Home')"><i class="fa-solid fa-house"></i> Home</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Entertainment','fa-film','Entertainment')"><i class="fa-solid fa-film"></i> Entertainment</button>
+                <button type="button" class="niche-opt" onclick="pickEditNiche('Other','fa-star','Other')"><i class="fa-solid fa-star"></i> Other</button>
+              </div>
+            </div>
+            <input type="hidden" id="edit-niche" value="">
+            <span class="field-error" id="edit-err-niche"></span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary btn-block" onclick="editGoToStep2()">Next: Reach &amp; Numbers</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Metrics ── -->
+    <div id="edit-panel-2" class="hidden">
+      <div class="setup-header">
+        <button class="btn-back" onclick="editGoToStep1()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="edit-step-label-wrap">
+          <p class="edit-step-label">Step 2 of 2</p>
+          <h2 class="form-title" style="margin:0;">Reach &amp; Numbers</h2>
+        </div>
+        <div style="width:32px;"></div>
+      </div>
+
+      <div class="form-container">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-followers"><i class="fa-solid fa-users"></i> Followers</label>
+            <input type="number" id="edit-followers" placeholder="e.g. 12500" min="100">
+            <span class="field-error" id="edit-err-followers"></span>
+          </div>
+          <div class="form-group">
+            <label for="edit-engagement"><i class="fa-solid fa-percent"></i> Engagement</label>
+            <input type="number" id="edit-engagement" placeholder="e.g. 4.2" step="0.1" min="0.1" max="100">
+            <span class="field-error" id="edit-err-engagement"></span>
+          </div>
+        </div>
+
+        <fieldset class="metrics-fieldset">
+          <legend>Average views per content type</legend>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-reel-views"><i class="fa-solid fa-circle-play"></i> Reel Views</label>
+              <input type="number" id="edit-reel-views" placeholder="e.g. 15000" min="0">
+              <span class="field-error" id="edit-err-reel-views"></span>
+            </div>
+            <div class="form-group">
+              <label for="edit-post-views"><i class="fa-solid fa-image"></i> Post Views</label>
+              <input type="number" id="edit-post-views" placeholder="e.g. 8000" min="0">
+              <span class="field-error" id="edit-err-post-views"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-story-views"><i class="fa-solid fa-layer-group"></i> Story Views</label>
+            <input type="number" id="edit-story-views" placeholder="e.g. 5000" min="0">
+            <span class="field-error" id="edit-err-story-views"></span>
+          </div>
+        </fieldset>
+
+        <fieldset class="metrics-fieldset">
+          <legend>Average engagement per post (last 7 days)</legend>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-likes"><i class="fa-solid fa-heart"></i> Avg. Likes</label>
+              <input type="number" id="edit-likes" placeholder="Likes" min="0">
+              <span class="field-error" id="edit-err-likes"></span>
+            </div>
+            <div class="form-group">
+              <label for="edit-comments"><i class="fa-solid fa-comment"></i> Avg. Comments</label>
+              <input type="number" id="edit-comments" placeholder="Comments" min="0">
+              <span class="field-error" id="edit-err-comments"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="metrics-fieldset">
+          <legend>Pinned Content <span class="optional-tag" style="text-transform:none;font-weight:400;">optional</span></legend>
+          <p class="field-hint" style="margin-bottom:12px;">Your 3 best-performing pieces. Businesses will see these as your showcase work.</p>
+          <div class="form-group">
+            <label for="edit-pin-reel"><i class="fa-solid fa-circle-play"></i> Best Reel</label>
+            <input type="url" id="edit-pin-reel" placeholder="https://instagram.com/reel/...">
+          </div>
+          <div class="form-group">
+            <label for="edit-pin-post"><i class="fa-solid fa-image"></i> Best Feed Post</label>
+            <input type="url" id="edit-pin-post" placeholder="https://instagram.com/p/...">
+          </div>
+          <div class="form-group">
+            <label for="edit-pin-story"><i class="fa-solid fa-layer-group"></i> Best Story / Highlight</label>
+            <input type="url" id="edit-pin-story" placeholder="https://instagram.com/stories/...">
+          </div>
+        </fieldset>
+
+        <button type="button" class="btn-primary btn-block" onclick="saveEditProfile()">Save Changes</button>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       QR CAMERA SCANNER MODAL
+  ══════════════════════════════════ -->
+  <div id="qr-camera-modal" class="qr-modal hidden" role="dialog" aria-modal="true">
+    <div class="qr-modal-inner">
+      <button class="qr-modal-close" onclick="closeQRCamera()" aria-label="Close scanner">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <p class="qr-modal-label">Point your camera at the Instagram QR code</p>
+      <div class="qr-viewfinder">
+        <video id="qr-video" autoplay playsinline muted></video>
+        <canvas id="qr-canvas" style="display:none;"></canvas>
+        <div class="qr-corner qr-corner-tl"></div>
+        <div class="qr-corner qr-corner-tr"></div>
+        <div class="qr-corner qr-corner-bl"></div>
+        <div class="qr-corner qr-corner-br"></div>
+      </div>
+      <p class="qr-modal-hint">Find your code in Instagram: Profile &gt; top-right menu &gt; QR Code</p>
+    </div>
+  </div>
+
+</div>
+<script src="influencer.js"></script>
+</body>
+</html>

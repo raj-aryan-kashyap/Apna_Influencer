@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Apna Influencer</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/js/all.min.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+  <div class="app-container">
+    <section class="view active">
+      <div class="brand-hero">
+        <div class="logo-badge"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h1>Apna Influencer</h1>
+        <p class="subtitle">Grow together. Connect local shops with local creators.</p>
+      </div>
+      <div class="role-selector-card">
+        <h3>Welcome! How are you joining us?</h3>
+        <p class="card-caption">Pick your profile to get started.</p>
+        <div class="selection-buttons">
+          <a class="role-btn" href="influencer.html">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>I'm a Creator</span>
+            <small>Share content, earn from local brands</small>
+          </a>
+          <a class="role-btn" href="business.html">
+            <i class="fa-solid fa-shop"></i>
+            <span>I'm a Business</span>
+            <small>Find creators near your shop</small>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        // Clear all old caches then register fresh
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+  </script>
+</body>
+</html>

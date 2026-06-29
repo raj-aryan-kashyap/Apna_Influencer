@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Business — Apna Influencer</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="business.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/js/all.min.js"></script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+<div class="app-container">
+
+  <!-- VIEW: DASHBOARD -->
+  <section id="view-business-dashboard" class="view active">
+    <div class="dashboard-header">
+      <div>
+        <span class="live-badge"><span class="pulse-dot"></span> Live Nearby</span>
+        <h2 style="margin-top:4px;">Local Creators</h2>
+      </div>
+      <a href="index.html" class="btn-icon-logout" title="Back to home">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    </div>
+    <p class="dashboard-intro">Creators in your area, sorted by proximity.</p>
+    <div id="influencer-feed-list" class="feed-list">
+      <!-- Injected by business.js -->
+    </div>
+  </section>
+
+</div>
+<script src="business.js"></script>
+</body>
+</html>
