@@ -14,24 +14,74 @@
 <body>
 <div class="app-container">
 
-  <!-- VIEW: DASHBOARD -->
-  <section id="view-business-dashboard" class="view active">
-    <div class="dashboard-header">
-      <div>
-        <span class="live-badge"><span class="pulse-dot"></span> Live Nearby</span>
-        <h2 style="margin-top:4px;">Local Creators</h2>
+  <!-- ── DASHBOARD SHELL ── -->
+  <section id="bv-dash" class="view active">
+
+    <!-- Header -->
+    <div class="biz-header">
+      <div class="biz-header-left">
+        <div class="biz-avatar-sm" id="biz-avatar-sm">C</div>
+        <div>
+          <p class="biz-header-name" id="biz-header-name">Chai Wala Café</p>
+          <p class="biz-header-city" id="biz-header-city">Delhi · Café</p>
+        </div>
       </div>
       <a href="index.html" class="btn-icon-logout" title="Back to home">
         <i class="fa-solid fa-right-from-bracket"></i>
       </a>
     </div>
-    <p class="dashboard-intro">Creators in your area, sorted by proximity.</p>
-    <div id="influencer-feed-list" class="feed-list">
+
+    <!-- Tab content area -->
+    <div class="biz-tab-content" id="biz-tab-content">
       <!-- Injected by business.js -->
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="biz-nav-discover" onclick="bizTab('discover')">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>Discover</span>
+      </button>
+      <button class="nav-item" id="biz-nav-projects" onclick="bizTab('projects')">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>Projects</span>
+        <span class="nav-badge hidden" id="badge-projects"></span>
+      </button>
+      <button class="nav-item" id="biz-nav-messages" onclick="bizTab('messages')">
+        <i class="fa-solid fa-message"></i>
+        <span>Messages</span>
+        <span class="nav-badge hidden" id="badge-messages"></span>
+      </button>
+      <button class="nav-item" id="biz-nav-account" onclick="bizTab('account')">
+        <i class="fa-solid fa-building"></i>
+        <span>Account</span>
+      </button>
+    </nav>
+
+  </section>
+
+  <!-- ── CHAT DETAIL VIEW ── -->
+  <section id="bv-chat" class="view hidden">
+    <div class="chat-header">
+      <button class="btn-back" onclick="closeBizChat()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="chat-header-info" id="biz-chat-header-info"></div>
+    </div>
+    <div class="chat-offer-banner" id="biz-chat-offer-banner"></div>
+    <div class="chat-messages" id="biz-chat-messages"></div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="biz-chat-input" type="text"
+             placeholder="Type a message…"
+             onkeydown="handleBizChatEnter(event)">
+      <button class="chat-send-btn" onclick="sendBizMessage()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
     </div>
   </section>
 
 </div>
+<div id="biz-toast" class="toast hidden"></div>
 <script src="business.js"></script>
 </body>
 </html>
