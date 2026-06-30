@@ -394,6 +394,83 @@
   </section>
 
   <!-- ══════════════════════════════════
+       POST REQUIREMENT VIEW
+  ══════════════════════════════════ -->
+  <section id="bv-post-brief" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-dash');bizTab('projects')">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <span class="signup-title">Post Requirement</span>
+    </div>
+    <div class="signup-form-card">
+      <!-- Content Type -->
+      <div class="form-group">
+        <label class="form-label">Content Type</label>
+        <div class="pill-selector" id="pb-type-pills">
+          <button class="pill-opt pill-opt-active" onclick="selectBriefType('Reel')"><i class="fa-solid fa-circle-play"></i> Reel</button>
+          <button class="pill-opt" onclick="selectBriefType('Feed Post')"><i class="fa-solid fa-image"></i> Feed Post</button>
+          <button class="pill-opt" onclick="selectBriefType('Stories')"><i class="fa-solid fa-layer-group"></i> Stories</button>
+          <button class="pill-opt" onclick="selectBriefType('Mixed')"><i class="fa-solid fa-shuffle"></i> Mixed</button>
+        </div>
+        <input type="hidden" id="pb-type" value="Reel">
+      </div>
+      <!-- Quantity -->
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <div class="qty-stepper">
+          <button type="button" class="qty-btn" onclick="stepQty(-1)"><i class="fa-solid fa-minus"></i></button>
+          <span class="qty-display" id="pb-qty-display">3</span>
+          <button type="button" class="qty-btn" onclick="stepQty(1)"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <input type="hidden" id="pb-qty" value="3">
+      </div>
+      <!-- Deadline -->
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <div class="pill-selector" id="pb-days-pills">
+          <button class="pill-opt" onclick="selectBriefDays(7)">7 days</button>
+          <button class="pill-opt pill-opt-active" onclick="selectBriefDays(14)">14 days</button>
+          <button class="pill-opt" onclick="selectBriefDays(21)">21 days</button>
+          <button class="pill-opt" onclick="selectBriefDays(30)">30 days</button>
+        </div>
+        <input type="hidden" id="pb-days" value="14">
+      </div>
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Brief Description</label>
+        <textarea id="pb-desc" class="form-input form-textarea"
+          placeholder="What do you need? Describe the content, tone, key messages, and any specific requirements..."
+          rows="4" maxlength="500"
+          oninput="document.getElementById('pb-char-count').textContent=this.value.length+' / 500'"></textarea>
+        <p class="char-count" id="pb-char-count">0 / 500</p>
+        <p class="field-err" id="pb-err-desc"></p>
+      </div>
+      <!-- Budget -->
+      <div class="form-group">
+        <label class="form-label">Budget</label>
+        <div class="budget-input-wrap">
+          <span class="budget-rupee">₹</span>
+          <input type="number" id="pb-budget" class="form-input budget-field"
+            placeholder="0" min="100" oninput="onBriefBudgetChange()">
+        </div>
+        <div class="budget-suggestion" id="pb-budget-hint">
+          <i class="fa-solid fa-lightbulb"></i>
+          Community avg for Reel: <strong>₹2,200</strong>
+        </div>
+        <div class="budget-warning hidden" id="pb-budget-warn">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Below community average — you may get fewer bids
+        </div>
+        <p class="field-err" id="pb-err-budget"></p>
+      </div>
+      <button class="btn-primary btn-block" style="margin-top:8px" onclick="savePostBrief()">
+        <i class="fa-solid fa-paper-plane"></i> Post Requirement
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
        ADD BUSINESS VIEW
   ══════════════════════════════════ -->
   <section id="bv-add-biz" class="view hidden">

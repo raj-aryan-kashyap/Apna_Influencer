@@ -113,6 +113,45 @@ function defaultNicheForBiz(biz) {
   return BIZ_TO_NICHE[biz?.category] || null;
 }
 
+const COMMUNITY_AVG_BUDGET = { 'Reel': 2200, 'Feed Post': 1500, 'Stories': 1000, 'Mixed': 1800 };
+
+const MOCK_BRIEFS_SEED = [
+  { id:'brief_s1', bizId:'external', bizName:'Studio Glow', bizCategory:'Beauty & Wellness',
+    bizIcon:'fa-spa', bizColor:'#ec4899', bizCity:'Delhi', bizLogo:null,
+    contentType:'Reel', quantity:2, daysToDeliver:10,
+    description:'Looking for a beauty creator to showcase our new skin-care range. Reels should be educational and aspirational, 45–60 seconds each.',
+    suggestedBudget:2200, budget:4000, niche:'Beauty & Skincare',
+    postedAt:'2026-06-29', expiresAt:'2026-07-13', status:'open' },
+  { id:'brief_s2', bizId:'external', bizName:'The Plant Store', bizCategory:'Home & Decor',
+    bizIcon:'fa-house', bizColor:'#10b981', bizCity:'Gurugram', bizLogo:null,
+    contentType:'Stories', quantity:5, daysToDeliver:7,
+    description:'Need 5 story posts showcasing our monsoon plant collection. Creative and homey vibe — show plants in real-life home settings.',
+    suggestedBudget:1000, budget:2500, niche:'Home & Decor',
+    postedAt:'2026-06-28', expiresAt:'2026-07-12', status:'open' },
+  { id:'brief_s3', bizId:'external', bizName:'FitZone Gym', bizCategory:'Fitness & Gym',
+    bizIcon:'fa-dumbbell', bizColor:'#6366f1', bizCity:'Delhi', bizLogo:null,
+    contentType:'Reel', quantity:3, daysToDeliver:14,
+    description:'Promote our new membership drive with energetic workout reels. Show our equipment, classes, and the vibe. Must-include: gym tour and workout demo.',
+    suggestedBudget:2200, budget:6000, niche:'Fitness & Health',
+    postedAt:'2026-06-27', expiresAt:'2026-07-11', status:'open' },
+  { id:'brief_s4', bizId:'external', bizName:'Zara Boutique', bizCategory:'Clothing & Fashion',
+    bizIcon:'fa-shirt', bizColor:'#8b5cf6', bizCity:'Delhi', bizLogo:null,
+    contentType:'Feed Post', quantity:4, daysToDeliver:21,
+    description:'Showcase our new seasonal collection in 4 curated feed posts. Aesthetic, editorial feel. Each post should highlight a different outfit category.',
+    suggestedBudget:1500, budget:5000, niche:'Fashion & Lifestyle',
+    postedAt:'2026-06-26', expiresAt:'2026-07-10', status:'open' }
+];
+
+function getBriefs() { try { return JSON.parse(localStorage.getItem('apna_briefs'))||[]; } catch(e){return[];} }
+function saveBriefs(b) { try { localStorage.setItem('apna_briefs', JSON.stringify(b)); } catch(e){} }
+function getBids()   { try { return JSON.parse(localStorage.getItem('apna_bids'))||[]; } catch(e){return[];} }
+function saveBids(b) { try { localStorage.setItem('apna_bids',   JSON.stringify(b)); } catch(e){} }
+function seedMockBriefs() {
+  if (localStorage.getItem('apna_briefs_seeded')) return;
+  saveBriefs(MOCK_BRIEFS_SEED);
+  localStorage.setItem('apna_briefs_seeded','1');
+}
+
 const FILTERS = [
   { id: 'distance', label: 'Nearest First',     icon: 'fa-location-dot',      intro: 'Creators near you, closest first.' },
   { id: 'reach',    label: 'Best Reach',         icon: 'fa-chart-simple',      intro: 'Creators sorted by highest reach.' },
@@ -131,6 +170,10 @@ let nichePickerOpen    = false;
 let activeBizChat  = null;
 let bizProjects    = [];
 let bizChats       = [];
+let expandedBriefId  = null;
+let postBriefType    = 'Reel';
+let postBriefDays    = 14;
+let postBriefQty     = 3;
 
 // ─────────────────────────────────────────────────────
 // INIT
@@ -152,6 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   bizProjects = JSON.parse(JSON.stringify(BIZ_PROJECTS_SEED));
   bizChats    = JSON.parse(JSON.stringify(BIZ_CHATS_SEED));
+
+  seedMockBriefs();
 
   const saved = localStorage.getItem('biz_auth');
   if (saved) {
@@ -594,8 +639,11 @@ function updateBizBadges() {
   const needsReview = bizProjects.filter(p => p.status === 'delivered').length;
   const projBadge   = document.getElementById('badge-projects');
   if (projBadge) {
-    projBadge.textContent = needsReview;
-    projBadge.classList.toggle('hidden', needsReview === 0);
+    const myBriefs = getBriefs().filter(b => b.bizId === (BIZ_AUTH?.activeBizId));
+    const pendingBids = getBids().filter(bid => myBriefs.some(b => b.id === bid.briefId) && bid.status === 'pending').length;
+    const totalProjBadge = needsReview + pendingBids;
+    projBadge.textContent = totalProjBadge;
+    projBadge.classList.toggle('hidden', totalProjBadge === 0);
   }
 }
 
@@ -697,7 +745,92 @@ function renderBizProjects() {
   const typeIcon = { Reel: 'fa-circle-play', 'Feed Post': 'fa-image', Stories: 'fa-layer-group' };
   const typeCls  = { Reel: 'pkg-icon-reel',  'Feed Post': 'pkg-icon-post', Stories: 'pkg-icon-stories' };
 
-  if (!bizProjects.length) return `
+  // ── Requirements section ──
+  const myBriefs = getBriefs().filter(b => b.bizId === BIZ_AUTH.activeBizId);
+  const allBids  = getBids();
+  const typeIcon2 = { Reel:'fa-circle-play', 'Feed Post':'fa-image', Stories:'fa-layer-group', Mixed:'fa-shuffle' };
+  const typeCls2  = { Reel:'pkg-icon-reel', 'Feed Post':'pkg-icon-post', Stories:'pkg-icon-stories', Mixed:'pkg-icon-reel' };
+
+  const briefCards = myBriefs.map(brief => {
+    const bidsForBrief = allBids.filter(b => b.briefId === brief.id);
+    const pendingCount = bidsForBrief.filter(b => b.status === 'pending').length;
+    const isExpanded   = expandedBriefId === brief.id;
+    const typeIco = typeIcon2[brief.contentType] || 'fa-circle-play';
+    const typeCl  = typeCls2[brief.contentType]  || 'pkg-icon-reel';
+    const statusLabel = brief.status === 'open' ? `Expires ${brief.expiresAt}` : brief.status === 'fulfilled' ? 'Fulfilled' : 'Closed';
+
+    const bidBadge = pendingCount > 0
+      ? `<span class="brief-bid-badge">${pendingCount} new</span>` : '';
+
+    const bidsSection = isExpanded ? `
+      <div class="brief-bids-list">
+        ${bidsForBrief.length === 0
+          ? '<p class="brief-no-bids"><i class="fa-solid fa-clock"></i> No bids yet — waiting for creators</p>'
+          : bidsForBrief.map(bid => `
+            <div class="bid-item bid-item-${bid.status}">
+              <div class="bid-item-top">
+                <div>
+                  <p class="bid-handle">${bid.creatorHandle}</p>
+                  <p class="bid-meta">${bid.creatorNiche}${bid.creatorCity ? ' · ' + bid.creatorCity : ''}</p>
+                </div>
+                <strong class="bid-amount">₹${bid.amount.toLocaleString('en-IN')}</strong>
+              </div>
+              ${bid.note ? `<p class="bid-note">"${bid.note}"</p>` : ''}
+              ${bid.status === 'pending' && brief.status === 'open' ? `
+                <div class="bid-actions">
+                  <button class="act-btn act-accept" onclick="acceptBid('${brief.id}','${bid.id}')">
+                    <i class="fa-solid fa-check"></i> Accept
+                  </button>
+                  <button class="act-btn act-archive" onclick="dismissBid('${brief.id}','${bid.id}')">
+                    <i class="fa-solid fa-xmark"></i> Dismiss
+                  </button>
+                </div>` : `<span class="bid-status-badge bid-status-${bid.status}">${bid.status}</span>`}
+            </div>`).join('')}
+        ${brief.status === 'open'
+          ? `<button class="close-brief-btn" onclick="closeBrief('${brief.id}')">Close requirement</button>` : ''}
+      </div>` : '';
+
+    return `
+      <div class="brief-card${brief.status !== 'open' ? ' brief-card-closed' : ''}">
+        <div class="brief-card-header" onclick="toggleBriefBids('${brief.id}')">
+          <div class="brief-card-left">
+            <span class="pkg-icon-wrap ${typeCl}" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;">
+              <i class="fa-solid ${typeIco}" style="font-size:13px;"></i>
+            </span>
+            <div>
+              <p class="brief-card-title">${brief.quantity} × ${brief.contentType} · ${brief.daysToDeliver} days</p>
+              <p class="brief-card-sub">₹${brief.budget.toLocaleString('en-IN')} · ${bidsForBrief.length} bid${bidsForBrief.length!==1?'s':''} · <span class="brief-status-txt">${statusLabel}</span></p>
+            </div>
+          </div>
+          <div class="brief-card-right">
+            ${bidBadge}
+            <i class="fa-solid fa-chevron-${isExpanded?'up':'down'} brief-chevron"></i>
+          </div>
+        </div>
+        ${bidsSection}
+      </div>`;
+  }).join('');
+
+  const requirementsSection = `
+    <div class="biz-section-header" style="margin-bottom:12px;">
+      <span>Your Requirements</span>
+      <button class="acct-add-biz-btn" onclick="openPostBrief()">
+        <i class="fa-solid fa-plus"></i> Post
+      </button>
+    </div>
+    ${myBriefs.length ? `<div class="feed-list" style="gap:10px;">${briefCards}</div>` : `
+      <div class="brief-empty-state">
+        <i class="fa-solid fa-bullhorn"></i>
+        <p>No requirements posted yet</p>
+        <small>Post what you need and let creators bid on it</small>
+        <button class="btn-primary" style="margin-top:12px;padding:10px 20px;font-size:13px;" onclick="openPostBrief()">
+          <i class="fa-solid fa-plus"></i> Post Requirement
+        </button>
+      </div>`}
+    <div style="margin-bottom:20px;"></div>`;
+
+  // ── Campaigns section ──
+  if (!bizProjects.length) return requirementsSection + `
     <div class="empty-state">
       <i class="fa-solid fa-briefcase"></i>
       <p>No active projects</p>
@@ -754,7 +887,7 @@ function renderBizProjects() {
   }).join('');
 
   const active = bizProjects.filter(p => p.status !== 'completed').length;
-  return `
+  return requirementsSection + `
     <div class="biz-section-header">
       <span>Active Campaigns</span>
       <span class="biz-section-count">${active} active</span>
@@ -1112,6 +1245,208 @@ function deleteThisBiz() {
   showBizView('bv-dash');
   bizTab('account');
   showBizToast(biz.name + ' deleted');
+}
+
+// ─────────────────────────────────────────────────────
+// POST BRIEF FUNCTIONS
+// ─────────────────────────────────────────────────────
+function openPostBrief() {
+  postBriefType = 'Reel'; postBriefDays = 14; postBriefQty = 3;
+  showBizView('bv-post-brief');
+  setTimeout(() => {
+    updateBriefTypePills(); updateBriefDaysPills();
+    const qtyEl = document.getElementById('pb-qty-display');
+    if(qtyEl) qtyEl.textContent = postBriefQty;
+    const qtyInput = document.getElementById('pb-qty');
+    if(qtyInput) qtyInput.value = postBriefQty;
+    const budgetEl = document.getElementById('pb-budget');
+    if(budgetEl) { budgetEl.value = COMMUNITY_AVG_BUDGET[postBriefType]; }
+    updateBriefBudgetHint();
+    const descEl = document.getElementById('pb-desc');
+    if(descEl) descEl.value = '';
+    const charCount = document.getElementById('pb-char-count');
+    if(charCount) charCount.textContent = '0 / 500';
+    ['pb-err-desc','pb-err-budget'].forEach(id => setFieldErr(id,''));
+    document.getElementById('pb-budget-warn')?.classList.add('hidden');
+  }, 50);
+}
+
+function updateBriefTypePills() {
+  const types = ['Reel','Feed Post','Stories','Mixed'];
+  const pills = document.getElementById('pb-type-pills');
+  if(!pills) return;
+  pills.querySelectorAll('.pill-opt').forEach((btn,i) => {
+    btn.classList.toggle('pill-opt-active', types[i] === postBriefType);
+  });
+  document.getElementById('pb-type').value = postBriefType;
+}
+
+function updateBriefDaysPills() {
+  const days = [7,14,21,30];
+  const pills = document.getElementById('pb-days-pills');
+  if(!pills) return;
+  pills.querySelectorAll('.pill-opt').forEach((btn,i) => {
+    btn.classList.toggle('pill-opt-active', days[i] === postBriefDays);
+  });
+  document.getElementById('pb-days').value = postBriefDays;
+}
+
+function selectBriefType(type) {
+  postBriefType = type;
+  updateBriefTypePills();
+  const budgetEl = document.getElementById('pb-budget');
+  if(budgetEl && (!budgetEl.value || budgetEl.value == budgetEl.dataset.lastSuggested)) {
+    budgetEl.value = COMMUNITY_AVG_BUDGET[type];
+  }
+  if(budgetEl) budgetEl.dataset.lastSuggested = COMMUNITY_AVG_BUDGET[type];
+  updateBriefBudgetHint();
+}
+
+function selectBriefDays(days) {
+  postBriefDays = days;
+  updateBriefDaysPills();
+}
+
+function stepQty(delta) {
+  postBriefQty = Math.min(10, Math.max(1, postBriefQty + delta));
+  const el = document.getElementById('pb-qty-display');
+  if(el) el.textContent = postBriefQty;
+  const qtyInput = document.getElementById('pb-qty');
+  if(qtyInput) qtyInput.value = postBriefQty;
+}
+
+function updateBriefBudgetHint() {
+  const avg = COMMUNITY_AVG_BUDGET[postBriefType] || 2200;
+  const hint = document.getElementById('pb-budget-hint');
+  if(hint) hint.innerHTML = `<i class="fa-solid fa-lightbulb"></i> Community avg for ${postBriefType}: <strong>₹${avg.toLocaleString('en-IN')}</strong>`;
+}
+
+function onBriefBudgetChange() {
+  const val  = parseInt(document.getElementById('pb-budget')?.value) || 0;
+  const avg  = COMMUNITY_AVG_BUDGET[postBriefType] || 2200;
+  const warn = document.getElementById('pb-budget-warn');
+  if(warn) warn.classList.toggle('hidden', val === 0 || val >= avg);
+}
+
+function savePostBrief() {
+  const type   = document.getElementById('pb-type').value;
+  const qty    = parseInt(document.getElementById('pb-qty').value) || 1;
+  const days   = parseInt(document.getElementById('pb-days').value) || 14;
+  const desc   = document.getElementById('pb-desc').value.trim();
+  const budget = parseInt(document.getElementById('pb-budget').value) || 0;
+
+  const eDesc   = !desc || desc.length < 20 ? 'Add at least 20 characters describing what you need' : null;
+  const eBudget = budget < 100 ? 'Minimum budget is ₹100' : null;
+  setFieldErr('pb-err-desc',   eDesc);
+  setFieldErr('pb-err-budget', eBudget);
+  if(eDesc || eBudget) return;
+
+  const biz = BIZ_AUTH.businesses.find(b => b.id === BIZ_AUTH.activeBizId);
+  if(!biz) return;
+
+  const today    = new Date();
+  const expires  = new Date(today); expires.setDate(expires.getDate() + 14);
+  const pad      = n => String(n).padStart(2,'0');
+  const fmtD     = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+  const brief = {
+    id:              'brief_' + Date.now(),
+    bizId:           biz.id,
+    bizName:         biz.name,
+    bizCategory:     biz.category,
+    bizIcon:         biz.icon,
+    bizColor:        biz.color,
+    bizCity:         biz.city,
+    bizLogo:         biz.logo || null,
+    contentType:     type,
+    quantity:        qty,
+    daysToDeliver:   days,
+    description:     desc,
+    suggestedBudget: COMMUNITY_AVG_BUDGET[type] || 2200,
+    budget:          budget,
+    niche:           BIZ_TO_NICHE[biz.category] || null,
+    postedAt:        fmtD(today),
+    expiresAt:       fmtD(expires),
+    status:          'open'
+  };
+  const briefs = getBriefs();
+  briefs.push(brief);
+  saveBriefs(briefs);
+
+  showBizView('bv-dash');
+  bizTab('projects');
+  showBizToast('Requirement posted!');
+}
+
+function toggleBriefBids(briefId) {
+  expandedBriefId = expandedBriefId === briefId ? null : briefId;
+  bizTab('projects');
+}
+
+function acceptBid(briefId, bidId) {
+  const brief = getBriefs().find(b => b.id === briefId);
+  const bids  = getBids();
+  const bid   = bids.find(b => b.id === bidId);
+  if(!brief || !bid) return;
+  if(!confirm(`Accept bid from ${bid.creatorHandle} for ₹${bid.amount.toLocaleString('en-IN')}? This will close the requirement.`)) return;
+
+  bids.forEach(b => {
+    if(b.briefId === briefId) b.status = b.id === bidId ? 'accepted' : 'rejected';
+  });
+  saveBids(bids);
+
+  const briefs = getBriefs();
+  const brf = briefs.find(b => b.id === briefId);
+  if(brf) { brf.status = 'fulfilled'; saveBriefs(briefs); }
+
+  const newProject = {
+    id:       'bp_' + Date.now(),
+    creatorHandle: bid.creatorHandle,
+    creatorColor: '#6366f1',
+    offerType: brief.contentType,
+    price:    bid.amount,
+    status:   'brief_sent',
+    deadline: (() => { const d=new Date(); d.setDate(d.getDate()+brief.daysToDeliver); return d.toISOString().split('T')[0]; })(),
+    chatId:   'chat_' + Date.now(),
+    briefNote: brief.description
+  };
+  bizProjects.unshift(newProject);
+
+  const newChat = {
+    id:            newProject.chatId,
+    creatorHandle: bid.creatorHandle,
+    creatorInitial: (bid.creatorHandle[1] || bid.creatorHandle[0] || 'C').toUpperCase(),
+    creatorColor:  '#6366f1',
+    offerType:     brief.contentType,
+    offerPrice:    bid.amount,
+    unread:        true,
+    messages: [
+      { from:'biz', text:`Hi ${bid.creatorHandle}! We loved your bid for our ${brief.contentType} requirement. Looking forward to working with you.`, time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) }
+    ]
+  };
+  bizChats.unshift(newChat);
+  updateBizBadges();
+
+  expandedBriefId = null;
+  bizTab('projects');
+  showBizToast(`Accepted ${bid.creatorHandle}! Project created.`);
+}
+
+function dismissBid(briefId, bidId) {
+  const bids = getBids();
+  const bid  = bids.find(b => b.id === bidId);
+  if(bid) { bid.status = 'rejected'; saveBids(bids); }
+  bizTab('projects');
+}
+
+function closeBrief(briefId) {
+  if(!confirm('Close this requirement? It will no longer accept new bids.')) return;
+  const briefs = getBriefs();
+  const b = briefs.find(b => b.id === briefId);
+  if(b) { b.status = 'closed'; saveBriefs(briefs); }
+  expandedBriefId = null;
+  bizTab('projects');
+  showBizToast('Requirement closed');
 }
 
 function bizLogOut() {

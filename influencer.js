@@ -61,6 +61,10 @@ const AVATARS = [
 ];
 
 let currentAvatarIdx = 0;
+let offersSubTab     = 'my-offers';
+let oppNiche         = null;
+let oppNichePicker   = false;
+let activeBidBriefId = null;
 
 // ─────────────────────────────────────────────────────
 // MOCK DATA
@@ -266,11 +270,15 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       S.profile = JSON.parse(savedProfile);
       S.offers  = JSON.parse(localStorage.getItem('inf_offers') || '[]');
+      seedMockBriefs();
+      ensureOfferAnalytics();
+      oppNiche = S.profile?.niche || null;
       launchDashboard();
       return;
     } catch (e) { /* corrupted — start fresh */ }
   }
 
+  seedMockBriefs();
   renderSlide();
   showView('v-slides');
 });
@@ -868,6 +876,8 @@ function goLive() {
   });
 
   saveState();
+  ensureOfferAnalytics();
+  if (!oppNiche && S.profile?.niche) oppNiche = S.profile.niche;
   launchDashboard();
   showToast(S.profile.name ? '🚀 You\'re live! Businesses can now find you.' : 'New offer is live!');
 }
@@ -877,6 +887,67 @@ function saveState() {
     localStorage.setItem('inf_profile', JSON.stringify(S.profile));
     localStorage.setItem('inf_offers',  JSON.stringify(S.offers));
   } catch (e) { /* storage unavailable */ }
+}
+
+// ─────────────────────────────────────────────────────
+// SHARED BRIEF / BID STORAGE (mirrors business.js)
+// ─────────────────────────────────────────────────────
+const COMMUNITY_AVG_BUDGET = { 'Reel': 2200, 'Feed Post': 1500, 'Stories': 1000, 'Mixed': 1800 };
+
+const MOCK_BRIEFS_SEED = [
+  { id:'brief_s1', bizId:'external', bizName:'Studio Glow', bizCategory:'Beauty & Wellness',
+    bizIcon:'fa-spa', bizColor:'#ec4899', bizCity:'Delhi', bizLogo:null,
+    contentType:'Reel', quantity:2, daysToDeliver:10,
+    description:'Looking for a beauty creator to showcase our new skin-care range. Reels should be educational and aspirational, 45–60 seconds each.',
+    suggestedBudget:2200, budget:4000, niche:'Beauty & Skincare',
+    postedAt:'2026-06-29', expiresAt:'2026-07-13', status:'open' },
+  { id:'brief_s2', bizId:'external', bizName:'The Plant Store', bizCategory:'Home & Decor',
+    bizIcon:'fa-house', bizColor:'#10b981', bizCity:'Gurugram', bizLogo:null,
+    contentType:'Stories', quantity:5, daysToDeliver:7,
+    description:'Need 5 story posts showcasing our monsoon plant collection. Creative and homey vibe — show plants in real-life home settings.',
+    suggestedBudget:1000, budget:2500, niche:'Home & Decor',
+    postedAt:'2026-06-28', expiresAt:'2026-07-12', status:'open' },
+  { id:'brief_s3', bizId:'external', bizName:'FitZone Gym', bizCategory:'Fitness & Gym',
+    bizIcon:'fa-dumbbell', bizColor:'#6366f1', bizCity:'Delhi', bizLogo:null,
+    contentType:'Reel', quantity:3, daysToDeliver:14,
+    description:'Promote our new membership drive with energetic workout reels. Show our equipment, classes, and the vibe. Must-include: gym tour and workout demo.',
+    suggestedBudget:2200, budget:6000, niche:'Fitness & Health',
+    postedAt:'2026-06-27', expiresAt:'2026-07-11', status:'open' },
+  { id:'brief_s4', bizId:'external', bizName:'Zara Boutique', bizCategory:'Clothing & Fashion',
+    bizIcon:'fa-shirt', bizColor:'#8b5cf6', bizCity:'Delhi', bizLogo:null,
+    contentType:'Feed Post', quantity:4, daysToDeliver:21,
+    description:'Showcase our new seasonal collection in 4 curated feed posts. Aesthetic, editorial feel. Each post should highlight a different outfit category.',
+    suggestedBudget:1500, budget:5000, niche:'Fashion & Lifestyle',
+    postedAt:'2026-06-26', expiresAt:'2026-07-10', status:'open' }
+];
+
+function getBriefs() { try { return JSON.parse(localStorage.getItem('apna_briefs'))||[]; } catch(e){return[];} }
+function saveBriefs(b) { try { localStorage.setItem('apna_briefs', JSON.stringify(b)); } catch(e){} }
+function getBids()   { try { return JSON.parse(localStorage.getItem('apna_bids'))||[]; } catch(e){return[];} }
+function saveBids(b) { try { localStorage.setItem('apna_bids',   JSON.stringify(b)); } catch(e){} }
+function seedMockBriefs() {
+  if (localStorage.getItem('apna_briefs_seeded')) return;
+  saveBriefs(MOCK_BRIEFS_SEED);
+  localStorage.setItem('apna_briefs_seeded','1');
+}
+
+function ensureOfferAnalytics() {
+  let changed = false;
+  S.offers.forEach(o => {
+    if(o.impressions == null) {
+      const h = seedHash(o.id);
+      o.impressions = 30 + (h % 170);
+      o.contacts    = Math.max(1, Math.floor(o.impressions * (0.04 + ((h>>8)%10)*0.005)));
+      changed = true;
+    }
+  });
+  if(changed) saveState();
+}
+
+function seedHash(str) {
+  let h = 5381;
+  for(let i=0;i<str.length;i++) h = ((h<<5)+h+str.charCodeAt(i))&0xffffffff;
+  return Math.abs(h);
 }
 
 // ─────────────────────────────────────────────────────
@@ -931,9 +1002,28 @@ function switchTab(tab) {
 }
 
 // ─────────────────────────────────────────────────────
-// OFFERS TAB
+// OFFERS TAB — sub-tabs: My Offers | Opportunities
 // ─────────────────────────────────────────────────────
 function renderOffersTab() {
+  const openBriefs = getBriefs().filter(b => b.status === 'open');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const oppCount = openBriefs.filter(b => new Date(b.expiresAt) >= today).length;
+
+  const subTabs = `
+    <div class="offers-sub-tabs">
+      <button class="offers-sub-tab${offersSubTab==='my-offers'?' offers-sub-tab-active':''}"
+              onclick="setOffersSubTab('my-offers')">My Offers</button>
+      <button class="offers-sub-tab${offersSubTab==='opportunities'?' offers-sub-tab-active':''}"
+              onclick="setOffersSubTab('opportunities')">
+        Opportunities${oppCount>0?` <span class="opp-count-badge">${oppCount}</span>`:''}
+      </button>
+    </div>`;
+
+  if (offersSubTab === 'opportunities') return subTabs + renderOpportunities();
+  return subTabs + renderMyOffers();
+}
+
+function renderMyOffers() {
   const live     = S.offers.filter(o => o.status === 'live');
   const archived = S.offers.filter(o => o.status === 'archived');
 
@@ -956,6 +1046,15 @@ function renderOffersTab() {
       `).join('');
 
     const isLive = o.status === 'live';
+    const ctr = o.impressions > 0 ? ((o.contacts/o.impressions)*100).toFixed(1) : '0.0';
+    const analyticsRow = isLive ? `
+      <div class="offer-analytics-row">
+        <span class="analytics-chip"><i class="fa-solid fa-eye"></i> ${o.impressions ?? 0}</span>
+        <span class="analytics-chip analytics-ctr"><i class="fa-solid fa-arrow-pointer"></i> ${ctr}%</span>
+        <span class="analytics-chip"><i class="fa-solid fa-envelope-open-text"></i> ${o.contacts ?? 0}</span>
+        <span class="analytics-label">Last 30 days</span>
+      </div>` : '';
+
     return `
       <div class="offer-card ${!isLive ? 'card-archived' : ''}">
         <div class="offer-card-top">
@@ -971,6 +1070,7 @@ function renderOffersTab() {
           </span>
           ${o.notes ? `<p class="offer-notes">${o.notes}</p>` : ''}
         </div>
+        ${analyticsRow}
         <div class="offer-actions">
           ${isLive
             ? `<button class="act-btn act-archive" onclick="archiveOffer('${o.id}')"><i class="fa-solid fa-box-archive"></i> Archive</button>`
@@ -1005,6 +1105,162 @@ function renderOffersTab() {
       ` : ''}
     </div>
   `;
+}
+
+function renderOpportunities() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const myBids = getBids().filter(b => b.creatorHandle === (S.profile?.handle||''));
+  const allBriefs = getBriefs().filter(b => b.status === 'open');
+
+  const niches    = ['Food & Beverage','Fashion & Lifestyle','Fitness & Health','Travel','Beauty & Skincare','Tech & Gadgets','Home & Decor','Entertainment','Other'];
+  const nicheLbl  = oppNiche || 'All Niches';
+  const chevRot   = oppNichePicker ? 'rotate(180deg)' : 'rotate(0deg)';
+  const nicheChip = `
+    <button class="filter-chip filter-chip-niche${oppNiche?' filter-chip-niche-active':''}"
+            style="min-width:196px;justify-content:space-between;"
+            onclick="toggleOppNichePicker()">
+      <i class="fa-solid fa-tag"></i>
+      ${nicheLbl}
+      <i class="fa-solid fa-chevron-down" style="transition:transform 0.2s;transform:${chevRot};margin-left:2px;"></i>
+    </button>`;
+  const nichePickerRow = oppNichePicker ? `
+    <div class="niche-filter-row" style="margin-bottom:16px;">
+      <button class="niche-filter-opt${!oppNiche?' niche-filter-opt-active':''}" onclick="setOppNiche(null)">All Niches</button>
+      ${niches.map(n=>`<button class="niche-filter-opt${oppNiche===n?' niche-filter-opt-active':''}" onclick="setOppNiche('${n.replace(/'/g,"\\'")}'">${n}</button>`).join('')}
+    </div>` : '';
+
+  let filtered = oppNiche ? allBriefs.filter(b => b.niche === oppNiche) : allBriefs;
+  filtered.sort((a,b) => {
+    const aExp = new Date(a.expiresAt) < today;
+    const bExp = new Date(b.expiresAt) < today;
+    if(aExp !== bExp) return aExp ? 1 : -1;
+    return b.budget - a.budget;
+  });
+
+  if(!filtered.length) return `
+    <div class="tab-section">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">${nicheChip}</div>
+      ${nichePickerRow}
+      <div class="empty-state">
+        <i class="fa-solid fa-bullhorn"></i>
+        <p>No requirements yet</p>
+        <small>${oppNiche ? 'No briefs in this niche — try All Niches' : 'Businesses haven\'t posted any requirements yet'}</small>
+      </div>
+    </div>`;
+
+  const cards = filtered.map(brief => {
+    const myBid    = myBids.find(b => b.briefId === brief.id);
+    const isExpired = new Date(brief.expiresAt) < today;
+    const daysLeft  = Math.ceil((new Date(brief.expiresAt) - today) / 86400000);
+    const typeIco   = {Reel:'fa-circle-play','Feed Post':'fa-image',Stories:'fa-layer-group',Mixed:'fa-shuffle'}[brief.contentType]||'fa-circle-play';
+    const typeCl    = {Reel:'pkg-icon-reel','Feed Post':'pkg-icon-post',Stories:'pkg-icon-stories',Mixed:'pkg-icon-reel'}[brief.contentType]||'pkg-icon-reel';
+    const logoHtml  = brief.bizLogo
+      ? `<img src="${brief.bizLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:9px;">`
+      : `<i class="fa-solid ${brief.bizIcon}" style="font-size:14px;color:${brief.bizColor};"></i>`;
+    const logoStyle = brief.bizLogo ? 'background:#f3f4f6;' : `background:${brief.bizColor}20;`;
+
+    const deadlineChip = isExpired
+      ? `<span class="brief-expired-badge">Expired</span>`
+      : daysLeft <= 2
+        ? `<span class="deadline-badge badge-today"><i class="fa-solid fa-hourglass-half"></i> ${daysLeft}d left</span>`
+        : `<span class="deadline-badge badge-normal"><i class="fa-regular fa-calendar"></i> ${daysLeft}d left</span>`;
+
+    const showBidForm = activeBidBriefId === brief.id;
+
+    const bidFormHtml = showBidForm ? `
+      <div class="bid-form-expand">
+        <div class="bid-amount-wrap">
+          <span class="bid-rupee">₹</span>
+          <input type="number" id="bid-amount-${brief.id}" class="form-input"
+                 style="border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;"
+                 placeholder="${brief.budget}" value="${brief.budget}" min="100">
+        </div>
+        <textarea id="bid-note-${brief.id}" class="form-input form-textarea"
+                  placeholder="Tell them why you're a great fit... (optional)"
+                  rows="2" maxlength="200"
+                  style="margin-top:8px;font-size:13px;resize:none;"></textarea>
+        <div class="bid-form-actions">
+          <button class="btn-primary" style="flex:1;padding:11px;" onclick="submitBid('${brief.id}')">
+            <i class="fa-solid fa-paper-plane"></i> Submit Bid
+          </button>
+          <button class="act-btn" style="flex:0 0 auto;" onclick="closeBidForm()">Cancel</button>
+        </div>
+      </div>` : '';
+
+    const bidButtonHtml = myBid
+      ? `<div class="bid-sent-badge"><i class="fa-solid fa-check-circle"></i> Bid Sent · ₹${myBid.amount.toLocaleString('en-IN')}<span class="bid-sent-status">${myBid.status}</span></div>`
+      : isExpired
+        ? `<button class="btn-instagram" style="opacity:0.45;cursor:not-allowed;" disabled>Expired</button>`
+        : showBidForm ? '' : `
+          <button class="btn-primary btn-block" onclick="openBidForm('${brief.id}')">
+            <i class="fa-solid fa-hand-holding-dollar"></i> Submit Bid
+          </button>`;
+
+    return `
+      <div class="opp-brief-card${isExpired?' opp-brief-expired':''}">
+        <div class="opp-biz-row">
+          <div class="opp-biz-icon" style="${logoStyle}">${logoHtml}</div>
+          <div class="opp-biz-info">
+            <p class="opp-biz-name">${brief.bizName}</p>
+            <p class="opp-biz-meta">${brief.bizCategory} · ${brief.bizCity}</p>
+          </div>
+          ${deadlineChip}
+        </div>
+        <div class="opp-content-row">
+          <span class="pkg-icon-wrap ${typeCl}" style="width:28px;height:28px;border-radius:7px;flex-shrink:0;">
+            <i class="fa-solid ${typeIco}" style="font-size:11px;"></i>
+          </span>
+          <p class="opp-content-label">${brief.quantity} × ${brief.contentType}</p>
+          <span class="opp-duration"><i class="fa-regular fa-clock"></i> ${brief.daysToDeliver} days</span>
+        </div>
+        <p class="opp-desc">${brief.description.length > 100 ? brief.description.slice(0,100)+'…' : brief.description}</p>
+        <div class="opp-footer-row">
+          <span class="opp-budget"><i class="fa-solid fa-indian-rupee-sign"></i> ${brief.budget.toLocaleString('en-IN')}</span>
+          <span class="opp-niche-tag">${brief.niche || brief.bizCategory}</span>
+        </div>
+        ${bidButtonHtml}
+        ${bidFormHtml}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="tab-section">
+      <div style="display:flex;gap:8px;margin-bottom:0;">${nicheChip}</div>
+      ${nichePickerRow}
+      <div style="display:flex;flex-direction:column;gap:14px;">${cards}</div>
+    </div>`;
+}
+
+function setOffersSubTab(tab) { offersSubTab = tab; activeBidBriefId = null; switchTab('offers'); }
+function toggleOppNichePicker() { oppNichePicker = !oppNichePicker; switchTab('offers'); }
+function setOppNiche(niche) { oppNiche = niche; oppNichePicker = false; switchTab('offers'); }
+function openBidForm(briefId) { activeBidBriefId = briefId; switchTab('offers'); }
+function closeBidForm() { activeBidBriefId = null; switchTab('offers'); }
+
+function submitBid(briefId) {
+  const amountEl = document.getElementById('bid-amount-' + briefId);
+  const noteEl   = document.getElementById('bid-note-'   + briefId);
+  if(!amountEl) return;
+  const amount = parseInt(amountEl.value) || 0;
+  if(amount < 100) { showToast('Minimum bid is ₹100'); return; }
+  const note = noteEl?.value.trim() || '';
+  const bid = {
+    id:             'bid_' + Date.now(),
+    briefId:        briefId,
+    creatorHandle:  S.profile?.handle || '@creator',
+    creatorNiche:   S.profile?.niche  || '',
+    creatorCity:    S.profile?.city   || '',
+    amount:         amount,
+    note:           note,
+    submittedAt:    new Date().toISOString().split('T')[0],
+    status:         'pending'
+  };
+  const bids = getBids();
+  bids.push(bid);
+  saveBids(bids);
+  activeBidBriefId = null;
+  switchTab('offers');
+  showToast('Bid submitted! ₹' + amount.toLocaleString('en-IN'));
 }
 
 function archiveOffer(id) {

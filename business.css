@@ -1267,3 +1267,68 @@
   height: 100vh;
 }
 #bv-chat.hidden { display: none !important; }
+
+/* ── Pill Selector ── */
+.pill-selector { display:flex; flex-wrap:wrap; gap:8px; }
+.pill-opt { padding:8px 14px; border-radius:20px; border:1.5px solid var(--border-color); background:var(--bg-card); font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:6px; }
+.pill-opt:hover { border-color:#f97316; color:#f97316; }
+.pill-opt-active { background:#f97316; border-color:#f97316; color:#fff; }
+.pill-opt i, .pill-opt svg { font-size:12px; width:12px; height:12px; }
+
+/* ── Qty Stepper ── */
+.qty-stepper { display:inline-flex; align-items:center; gap:0; border:1.5px solid var(--border-color); border-radius:var(--radius-sm); overflow:hidden; }
+.qty-btn { width:38px; height:38px; background:var(--bg-app); border:none; cursor:pointer; color:var(--text-muted); font-size:13px; display:flex; align-items:center; justify-content:center; transition:background 0.1s; }
+.qty-btn:hover { background:var(--primary-light); color:var(--primary); }
+.qty-btn:active { background:#e0e7ff; }
+.qty-btn i, .qty-btn svg { font-size:12px; width:12px; height:12px; }
+.qty-display { min-width:44px; text-align:center; font-size:16px; font-weight:800; color:var(--text-main); padding:0 8px; }
+
+/* ── Budget Input ── */
+.budget-input-wrap { display:flex; align-items:center; border:1.5px solid var(--border-color); border-radius:var(--radius-sm); overflow:hidden; background:var(--bg-card); }
+.budget-rupee { padding:0 12px; font-size:15px; font-weight:700; color:var(--text-muted); background:var(--bg-app); border-right:1.5px solid var(--border-color); line-height:42px; height:42px; }
+.budget-field { border:none !important; border-radius:0 !important; flex:1; }
+.budget-suggestion { display:flex; align-items:center; gap:6px; font-size:12px; color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; border-radius:var(--radius-sm); padding:7px 10px; margin-top:8px; }
+.budget-suggestion i, .budget-suggestion svg { font-size:11px; width:11px; height:11px; }
+.budget-warning { display:flex; align-items:center; gap:6px; font-size:12px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:var(--radius-sm); padding:7px 10px; margin-top:6px; }
+.budget-warning i, .budget-warning svg { font-size:11px; width:11px; height:11px; }
+
+/* ── Char Count ── */
+.char-count { font-size:11px; color:var(--text-muted); text-align:right; margin-top:4px; }
+
+/* ── Form Textarea ── */
+.form-textarea { resize:vertical; min-height:80px; font-family:inherit; line-height:1.5; }
+
+/* ── Brief Cards in Projects Tab ── */
+.brief-card { background:var(--bg-card); border:1.5px solid var(--border-color); border-radius:var(--radius-md); overflow:hidden; margin-bottom:0; }
+.brief-card-closed { opacity:0.65; }
+.brief-card-header { display:flex; align-items:center; justify-content:space-between; padding:14px; cursor:pointer; gap:12px; }
+.brief-card-header:hover { background:var(--bg-app); }
+.brief-card-left { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.brief-card-title { font-size:14px; font-weight:700; color:var(--text-main); }
+.brief-card-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.brief-status-txt { color:var(--text-muted); }
+.brief-card-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.brief-bid-badge { background:#f97316; color:#fff; font-size:10px; font-weight:800; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+.brief-chevron { font-size:12px; color:var(--text-muted); }
+.brief-chevron.fa-chevron-up,
+.brief-chevron.fa-chevron-down { font-size:12px; width:12px; height:12px; }
+.brief-bids-list { border-top:1px solid var(--border-color); padding:12px; background:var(--bg-app); display:flex; flex-direction:column; gap:10px; }
+.brief-no-bids { font-size:13px; color:var(--text-muted); text-align:center; padding:12px 0; display:flex; align-items:center; justify-content:center; gap:6px; }
+.bid-item { background:var(--bg-card); border:1.5px solid var(--border-color); border-radius:var(--radius-sm); padding:12px; }
+.bid-item-accepted { border-color:#10b981; }
+.bid-item-rejected { opacity:0.5; }
+.bid-item-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px; }
+.bid-handle { font-size:14px; font-weight:700; color:var(--text-main); }
+.bid-meta { font-size:12px; color:var(--text-muted); margin-top:1px; }
+.bid-amount { font-size:16px; font-weight:800; color:#f97316; flex-shrink:0; }
+.bid-note { font-size:13px; color:var(--text-muted); font-style:italic; margin:6px 0; line-height:1.5; }
+.bid-actions { display:flex; gap:8px; margin-top:10px; }
+.bid-status-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-top:8px; }
+.bid-status-accepted { background:#d1fae5; color:#065f46; }
+.bid-status-rejected { background:#f3f4f6; color:var(--text-muted); }
+.bid-status-pending  { background:#fffbeb; color:#92400e; }
+.close-brief-btn { background:none; border:none; color:var(--danger); font-size:12px; font-weight:600; cursor:pointer; padding:4px 0; align-self:flex-start; }
+.brief-empty-state { display:flex; flex-direction:column; align-items:center; text-align:center; padding:32px 20px; background:var(--bg-card); border:1.5px dashed var(--border-color); border-radius:var(--radius-md); gap:6px; }
+.brief-empty-state i, .brief-empty-state svg { font-size:32px; width:32px; height:32px; opacity:0.25; }
+.brief-empty-state p { font-size:15px; font-weight:700; color:var(--text-main); }
+.brief-empty-state small { font-size:13px; color:var(--text-muted); }
