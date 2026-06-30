@@ -14,16 +14,230 @@
 <body>
 <div class="app-container">
 
-  <!-- ── DASHBOARD SHELL ── -->
-  <section id="bv-dash" class="view active">
+  <!-- ══════════════════════════════════
+       ONBOARDING SLIDES
+  ══════════════════════════════════ -->
+  <section id="bv-slides" class="view active">
+    <div class="biz-slides-container">
+      <div class="slides-topbar">
+        <a href="index.html" class="slides-home-btn"><i class="fa-solid fa-arrow-left"></i> Change role</a>
+        <button class="biz-slide-skip" onclick="skipBizSlides()">Skip</button>
+      </div>
+      <div class="biz-slide-node" id="biz-slide-content"></div>
+      <div class="biz-slide-footer">
+        <div class="dots-indicator" id="biz-slide-dots"></div>
+        <button class="btn-primary btn-block" id="btn-biz-slide-next" onclick="nextBizSlide()">Next</button>
+      </div>
+    </div>
+  </section>
 
-    <!-- Header -->
+  <!-- ══════════════════════════════════
+       WELCOME
+  ══════════════════════════════════ -->
+  <section id="bv-welcome" class="view hidden">
+    <a href="index.html" class="view-home-link"><i class="fa-solid fa-arrow-left"></i> Change role</a>
+    <div class="biz-welcome-hero">
+      <div class="logo-badge biz-logo-badge"><i class="fa-solid fa-shop"></i></div>
+      <h1>Apna Influencer</h1>
+      <p class="subtitle">Connect your business with creators your customers already follow.</p>
+    </div>
+    <div class="welcome-cards">
+      <div class="welcome-feature-row">
+        <div class="welcome-feature"><i class="fa-solid fa-magnifying-glass"></i><span>Discover local creators</span></div>
+        <div class="welcome-feature"><i class="fa-solid fa-briefcase"></i><span>Track campaigns</span></div>
+        <div class="welcome-feature"><i class="fa-solid fa-chart-simple"></i><span>Measure reach</span></div>
+      </div>
+      <button class="btn-primary btn-block" onclick="showBizView('bv-s1')">
+        <i class="fa-solid fa-building"></i> Create Business Account
+      </button>
+      <button class="btn-ghost btn-block login-link" onclick="showBizView('bv-login')">
+        Already have an account? <strong>Log in</strong>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       LOGIN
+  ══════════════════════════════════ -->
+  <section id="bv-login" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-welcome')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Log In</span>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="username-input-wrap">
+          <span class="username-at">@</span>
+          <input type="text" id="login-username" class="form-input username-field"
+                 placeholder="yourname" autocapitalize="none" autocorrect="off">
+        </div>
+        <p class="field-err" id="login-err-user"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" id="login-password" class="form-input" placeholder="Enter your password"
+                 onkeydown="if(event.key==='Enter') doLogin()">
+          <button class="pwd-toggle" onclick="togglePwdVis('login-password', this)" type="button">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <p class="field-err" id="login-err-pwd"></p>
+      </div>
+      <p class="field-err" id="login-err-global" style="margin-bottom:12px;"></p>
+      <button class="btn-primary btn-block" onclick="doLogin()">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Log In
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       SIGNUP — STEP 1: Account
+  ══════════════════════════════════ -->
+  <section id="bv-s1" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-welcome')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Create Account</span>
+    </div>
+    <div class="step-progress">
+      <div class="step-bar"><div class="step-bar-fill" style="width:33%"></div></div>
+      <span class="step-label">Step 1 of 3 — Your Account</span>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="field-hint">Your personal name</span></label>
+        <input type="text" id="s1-name" class="form-input" placeholder="Raj Kumar">
+        <p class="field-err" id="s1-err-name"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username <span class="field-hint">Lowercase letters, numbers, _</span></label>
+        <div class="username-input-wrap">
+          <span class="username-at">@</span>
+          <input type="text" id="s1-username" class="form-input username-field"
+                 placeholder="yourname" autocapitalize="none" autocorrect="off"
+                 oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+        </div>
+        <p class="field-err" id="s1-err-username"></p>
+      </div>
+      <button class="btn-primary btn-block" onclick="signupGoS2()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       SIGNUP — STEP 2: Password
+  ══════════════════════════════════ -->
+  <section id="bv-s2" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-s1')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Set Password</span>
+    </div>
+    <div class="step-progress">
+      <div class="step-bar"><div class="step-bar-fill" style="width:66%"></div></div>
+      <span class="step-label">Step 2 of 3 — Secure Your Account</span>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" id="s2-password" class="form-input"
+                 placeholder="Create a strong password"
+                 oninput="checkPasswordStrength(this.value)">
+          <button class="pwd-toggle" onclick="togglePwdVis('s2-password', this)" type="button">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <!-- Strength bar -->
+        <div class="pwd-strength-wrap hidden" id="pwd-strength-wrap">
+          <div class="pwd-strength-bar">
+            <div class="pwd-strength-fill" id="pwd-strength-fill"></div>
+          </div>
+          <span class="pwd-strength-label" id="pwd-strength-label">Weak</span>
+        </div>
+        <!-- Criteria checklist -->
+        <div class="pwd-criteria">
+          <span class="criterion" id="crit-len"><i class="fa-solid fa-circle"></i> 8+ characters</span>
+          <span class="criterion" id="crit-upper"><i class="fa-solid fa-circle"></i> Uppercase letter</span>
+          <span class="criterion" id="crit-num"><i class="fa-solid fa-circle"></i> Number</span>
+          <span class="criterion" id="crit-sym"><i class="fa-solid fa-circle"></i> Symbol (!@#$...)</span>
+        </div>
+        <p class="field-err" id="s2-err-pwd"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <div class="pwd-input-wrap">
+          <input type="password" id="s2-confirm" class="form-input" placeholder="Repeat your password">
+          <button class="pwd-toggle" onclick="togglePwdVis('s2-confirm', this)" type="button">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+        <p class="field-err" id="s2-err-confirm"></p>
+      </div>
+      <button class="btn-primary btn-block" onclick="signupGoS3()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       SIGNUP — STEP 3: First Business
+  ══════════════════════════════════ -->
+  <section id="bv-s3" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-s2')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Your Business</span>
+    </div>
+    <div class="step-progress">
+      <div class="step-bar"><div class="step-bar-fill" style="width:100%"></div></div>
+      <span class="step-label">Step 3 of 3 — Add Your First Business</span>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" id="s3-bizname" class="form-input" placeholder="e.g. Chai Wala Café">
+        <p class="field-err" id="s3-err-bizname"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="niche-picker" id="s3-cat-picker">
+          <button type="button" class="niche-trigger" onclick="toggleCatPicker('s3')">
+            <span class="niche-trigger-inner" id="s3-cat-display">
+              <i class="fa-solid fa-store"></i>
+              <span class="niche-placeholder">Select category</span>
+            </span>
+            <i class="fa-solid fa-chevron-down niche-arrow" id="s3-cat-arrow"></i>
+          </button>
+          <div class="niche-dropdown hidden" id="s3-cat-dropdown"></div>
+        </div>
+        <input type="hidden" id="s3-category" value="">
+        <input type="hidden" id="s3-caticon"  value="">
+        <p class="field-err" id="s3-err-cat"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input type="text" id="s3-city" class="form-input" placeholder="e.g. Delhi">
+        <p class="field-err" id="s3-err-city"></p>
+      </div>
+      <button class="btn-primary btn-block" onclick="signupFinish()">
+        <i class="fa-solid fa-check"></i> Create Account &amp; Go Live
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       DASHBOARD
+  ══════════════════════════════════ -->
+  <section id="bv-dash" class="view hidden">
+
+    <!-- Personal account header -->
     <div class="biz-header">
       <div class="biz-header-left">
-        <div class="biz-avatar-sm" id="biz-avatar-sm">C</div>
+        <div class="biz-avatar-sm" id="personal-avatar">R</div>
         <div>
-          <p class="biz-header-name" id="biz-header-name">Chai Wala Café</p>
-          <p class="biz-header-city" id="biz-header-city">Delhi · Café</p>
+          <p class="biz-header-name" id="personal-name-display">Raj Kumar</p>
+          <p class="biz-header-city" id="personal-username-display">@rajkumar</p>
         </div>
       </div>
       <a href="index.html" class="btn-icon-logout" title="Back to home">
@@ -31,10 +245,25 @@
       </a>
     </div>
 
-    <!-- Tab content area -->
-    <div class="biz-tab-content" id="biz-tab-content">
-      <!-- Injected by business.js -->
-    </div>
+    <!-- Business context HUD -->
+    <button class="biz-context-hud" id="biz-context-hud" onclick="openSwitcher()">
+      <div class="biz-hud-left">
+        <div class="biz-hud-icon" id="biz-hud-icon">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <div class="biz-hud-text">
+          <p class="biz-hud-label">Using as</p>
+          <p class="biz-hud-name" id="biz-hud-name">Chai Wala Café</p>
+        </div>
+      </div>
+      <div class="biz-hud-right">
+        <span class="biz-hud-city" id="biz-hud-city">Delhi</span>
+        <i class="fa-solid fa-chevron-down biz-hud-chevron"></i>
+      </div>
+    </button>
+
+    <!-- Tab content -->
+    <div class="biz-tab-content" id="biz-tab-content"></div>
 
     <!-- Bottom nav -->
     <nav class="bottom-nav">
@@ -53,19 +282,18 @@
         <span class="nav-badge hidden" id="badge-messages"></span>
       </button>
       <button class="nav-item" id="biz-nav-account" onclick="bizTab('account')">
-        <i class="fa-solid fa-building"></i>
+        <i class="fa-solid fa-user"></i>
         <span>Account</span>
       </button>
     </nav>
-
   </section>
 
-  <!-- ── CHAT DETAIL VIEW ── -->
+  <!-- ══════════════════════════════════
+       CHAT DETAIL
+  ══════════════════════════════════ -->
   <section id="bv-chat" class="view hidden">
     <div class="chat-header">
-      <button class="btn-back" onclick="closeBizChat()">
-        <i class="fa-solid fa-arrow-left"></i>
-      </button>
+      <button class="btn-back" onclick="closeBizChat()"><i class="fa-solid fa-arrow-left"></i></button>
       <div class="chat-header-info" id="biz-chat-header-info"></div>
     </div>
     <div class="chat-offer-banner" id="biz-chat-offer-banner"></div>
@@ -80,7 +308,149 @@
     </div>
   </section>
 
+  <!-- ══════════════════════════════════
+       EDIT PROFILE VIEW
+  ══════════════════════════════════ -->
+  <section id="bv-edit-profile" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-dash'); bizTab('account')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Edit Profile</span>
+    </div>
+    <div class="edit-avatar-section">
+      <div class="edit-avatar-wrap" onclick="document.getElementById('ep-photo-input').click()">
+        <div class="edit-avatar-circle" id="ep-avatar-preview">R</div>
+        <div class="edit-avatar-camera"><i class="fa-solid fa-camera"></i></div>
+      </div>
+      <input type="file" id="ep-photo-input" accept="image/*" class="hidden" onchange="handlePersonalPhotoUpload(event)">
+      <button class="remove-photo-btn hidden" id="ep-remove-photo" onclick="removePersonalPhoto()">Remove photo</button>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="ep-name" class="form-input" placeholder="Your full name">
+        <p class="field-err" id="ep-err-name"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="username-input-wrap">
+          <span class="username-at">@</span>
+          <input type="text" id="ep-username" class="form-input username-field" placeholder="yourname"
+                 autocapitalize="none" autocorrect="off">
+        </div>
+        <p class="field-err" id="ep-err-username"></p>
+      </div>
+      <button class="btn-primary btn-block" style="margin-top:8px" onclick="saveEditProfile()">Save Changes</button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════
+       EDIT BUSINESS VIEW
+  ══════════════════════════════════ -->
+  <section id="bv-edit-biz" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="showBizView('bv-dash'); bizTab('account')"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Edit Business</span>
+    </div>
+    <div class="edit-avatar-section">
+      <div class="edit-biz-logo-wrap" onclick="document.getElementById('eb-photo-input').click()">
+        <div class="edit-biz-logo-circle" id="eb-logo-preview">
+          <i class="fa-solid fa-store" id="eb-logo-icon"></i>
+        </div>
+        <div class="edit-avatar-camera"><i class="fa-solid fa-camera"></i></div>
+      </div>
+      <input type="file" id="eb-photo-input" accept="image/*" class="hidden" onchange="handleBizLogoUpload(event)">
+      <button class="remove-photo-btn hidden" id="eb-remove-photo" onclick="removeBizLogo()">Remove logo</button>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" id="eb-name" class="form-input" placeholder="Your business name">
+        <p class="field-err" id="eb-err-name"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="niche-picker" id="eb-cat-picker">
+          <button type="button" class="niche-trigger" onclick="toggleCatPicker('eb')">
+            <span class="niche-trigger-inner" id="eb-cat-display">Select category</span>
+            <i class="fa-solid fa-chevron-down niche-arrow" id="eb-cat-arrow"></i>
+          </button>
+          <div class="niche-dropdown hidden" id="eb-cat-dropdown"></div>
+        </div>
+        <input type="hidden" id="eb-category" value="">
+        <input type="hidden" id="eb-caticon"   value="">
+        <p class="field-err" id="eb-err-cat"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input type="text" id="eb-city" class="form-input" placeholder="e.g. Delhi">
+        <p class="field-err" id="eb-err-city"></p>
+      </div>
+      <button class="btn-primary btn-block" style="margin-top:8px" onclick="saveEditBiz()">Save Changes</button>
+      <button class="btn-danger-outline btn-block" id="eb-delete-btn" onclick="deleteThisBiz()">
+        <i class="fa-solid fa-trash"></i> Delete Business
+      </button>
+    </div>
+    <input type="hidden" id="eb-biz-id" value="">
+  </section>
+
+  <!-- ══════════════════════════════════
+       ADD BUSINESS VIEW
+  ══════════════════════════════════ -->
+  <section id="bv-add-biz" class="view hidden">
+    <div class="signup-header">
+      <button class="btn-back" onclick="closeAddBiz()"><i class="fa-solid fa-arrow-left"></i></button>
+      <span class="signup-title">Add Business</span>
+    </div>
+    <div class="signup-form-card">
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input type="text" id="ab-bizname" class="form-input" placeholder="e.g. Raj Sweets">
+        <p class="field-err" id="ab-err-bizname"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <div class="niche-picker" id="ab-cat-picker">
+          <button type="button" class="niche-trigger" onclick="toggleCatPicker('ab')">
+            <span class="niche-trigger-inner" id="ab-cat-display">
+              <i class="fa-solid fa-store"></i>
+              <span class="niche-placeholder">Select category</span>
+            </span>
+            <i class="fa-solid fa-chevron-down niche-arrow" id="ab-cat-arrow"></i>
+          </button>
+          <div class="niche-dropdown hidden" id="ab-cat-dropdown"></div>
+        </div>
+        <input type="hidden" id="ab-category" value="">
+        <input type="hidden" id="ab-caticon"  value="">
+        <p class="field-err" id="ab-err-cat"></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input type="text" id="ab-city" class="form-input" placeholder="e.g. Delhi">
+        <p class="field-err" id="ab-err-city"></p>
+      </div>
+      <button class="btn-primary btn-block" onclick="saveAddBiz()">
+        <i class="fa-solid fa-plus"></i> Add Business
+      </button>
+    </div>
+  </section>
+
+</div><!-- end .app-container -->
+
+<!-- ══════════════════════════════════
+     BUSINESS SWITCHER BOTTOM SHEET
+══════════════════════════════════ -->
+<div id="biz-switcher-overlay" class="biz-switcher-overlay hidden"
+     onclick="closeSwitcherOnOverlay(event)">
+  <div class="biz-switcher-sheet">
+    <div class="switcher-handle"></div>
+    <p class="switcher-title">Switch Business</p>
+    <div id="switcher-list" class="switcher-list"></div>
+    <button class="btn-secondary btn-block switcher-add-btn" onclick="openAddBiz()">
+      <i class="fa-solid fa-plus"></i> Add Another Business
+    </button>
+  </div>
 </div>
+
 <div id="biz-toast" class="toast hidden"></div>
 <script src="business.js"></script>
 </body>

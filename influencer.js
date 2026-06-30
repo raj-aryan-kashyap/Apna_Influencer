@@ -910,7 +910,14 @@ function updateStats() {
 function switchTab(tab) {
   S.tab = tab;
   ['offers','projects','messages','profile'].forEach(t => {
-    document.getElementById(`nav-${t}`)?.classList.toggle('active', t === tab);
+    const btn = document.getElementById(`nav-${t}`);
+    if (!btn) return;
+    btn.classList.toggle('active', t === tab);
+    if (t === tab) {
+      btn.classList.remove('nav-bounce');
+      void btn.offsetWidth; // reflow to restart animation
+      btn.classList.add('nav-bounce');
+    }
   });
   updateStats();
 
@@ -1452,9 +1459,11 @@ function renderProfileTab() {
 
         ${pinnedHtml}
 
-        <a href="${p.url}" target="_blank" rel="noopener" class="btn-instagram">
-          <i class="fa-brands fa-instagram"></i> View Instagram Profile
-        </a>
+        <div class="profile-section">
+          <a href="${p.url}" target="_blank" rel="noopener" class="btn-instagram">
+            <i class="fa-brands fa-instagram"></i> View Instagram Profile
+          </a>
+        </div>
       </div>
       <div class="profile-actions">
         <button class="act-btn act-delete" style="flex:1" onclick="logOut()">

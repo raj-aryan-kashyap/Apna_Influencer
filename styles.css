@@ -222,3 +222,46 @@ h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
   50%  { transform: scale(1.4); opacity: 0.4; }
   100% { transform: scale(0.9); opacity: 1; }
 }
+
+/* ── Slides topbar (shared across influencer + business) ── */
+.slides-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.slides-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 6px 0;
+}
+.slides-home-btn i, .slides-home-btn svg { font-size: 13px; width: 13px; height: 13px; }
+.slides-home-btn:hover { color: var(--text-main); }
+.slides-skip-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+/* ── "Change role" link on welcome/login screens ── */
+.view-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 16px 20px 0;
+}
+.view-home-link i, .view-home-link svg { font-size: 13px; width: 13px; height: 13px; }
+.view-home-link:hover { color: var(--text-main); }

@@ -25,11 +25,14 @@
   ══════════════════════════════════ -->
   <section id="v-slides" class="view hidden">
     <div class="slides-container">
+      <div class="slides-topbar">
+        <a href="index.html" class="slides-home-btn"><i class="fa-solid fa-arrow-left"></i> Change role</a>
+        <button class="slides-skip-btn" onclick="skipToSetup()">Skip</button>
+      </div>
       <div id="slide-content" class="slide-node"></div>
       <div class="slide-footer">
         <div id="slide-dots" class="dots-indicator"></div>
         <button class="btn-primary btn-block" id="btn-slide-next" onclick="nextSlide()">Next</button>
-        <button class="btn-ghost" onclick="skipToSetup()">Skip intro</button>
       </div>
     </div>
   </section>
@@ -67,7 +70,6 @@
           <button type="button" class="btn-av-action btn-rm-photo hidden" id="btn-remove-photo" onclick="removePhoto()">
             <i class="fa-solid fa-xmark"></i> Remove
           </button>
-          <p class="photo-hint">Skip. We will pick a fun random avatar for you.</p>
         </div>
       </div>
     </div>
